@@ -5,6 +5,7 @@ import {
      getProjectApplications,
      updateApplicationStatus } from '../controllers/applicationController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
+
 const router = express.Router()
 
 //apply to project
