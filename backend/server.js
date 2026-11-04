@@ -22,6 +22,7 @@ await connectDb();
 
 app.use("/api", TestRoutes);
 
+
 app.use("/api/auth", authRoutes);
 
 app.use("/api/projects", projectRoutes);
