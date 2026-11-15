@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import ProfileInfo from "../components/user/ProfileInfo";
 import ProfilePicture from "../components/user/ProfilePicture";
 import TechStack from "../components/user/TechStack";
 
 const Profile = () => {
   const tech = ["React", "MongoDb", "Java", "Tailiwnd"];
+  const navigate = useNavigate();
   return (
     <div className="h-full w-full flex py-5 flex-col pb-20 gap-8">
       <ProfilePicture />
@@ -27,7 +29,7 @@ const Profile = () => {
         <button className="w-full bg-[#2F4BE0] text-white rounded-xl py-3">
           Edit Profile
         </button>
-        <button className="w-full border border-[#DAD7CF] rounded-xl text-[#16151A] py-3">
+        <button onClick={()=> navigate("/my-projects")} className="w-full border border-[#DAD7CF] rounded-xl text-[#16151A] py-3">
           My Projects
         </button>
         <button className="w-full border border-[#DAD7CF] text-[#16151A] rounded-xl py-3">
