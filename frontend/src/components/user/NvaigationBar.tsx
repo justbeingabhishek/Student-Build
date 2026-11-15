@@ -37,9 +37,10 @@ const NvaigationBar = () => {
                     z-50"
     >
       {/* Your navigation icons here */}
-      {links.map((data) => {
+      {links.map((data,idx) => {
         return (
           <NavLink
+          key={idx}
             to={data.route}
             className="text-xs font-medium text-[#3D3A44] flex flex-col justify-center items-center"
           >

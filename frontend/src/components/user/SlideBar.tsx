@@ -42,8 +42,8 @@ const SlideBar = () => {
         </div>
         <div className='flex flex-col gap-4 '>
       {
-            links.map((data)=>{
-                return <NavLink to={data.route} className='font-medium cursor-pointer text-[#3D3A44] hover:bg-[#EEF1FF] px-4 py-2 rounded-md'>{data.name}</NavLink>
+            links.map((data,idx)=>{
+                return <NavLink key={idx} to={data.route} className='font-medium cursor-pointer text-[#3D3A44] hover:bg-[#EEF1FF] px-4 py-2 rounded-md'>{data.name}</NavLink>
             })
         }
         </div>

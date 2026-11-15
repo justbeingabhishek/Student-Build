@@ -2,7 +2,7 @@ import Card from "../components/user/Card";
 
 const Home = () => {
   return (
-    <div className="h-full w-full flex py-5 flex-col  pb-20  gap-8">
+    <div className="h-full w-full flex py-3 flex-col  pb-20  gap-8">
       <div>
         <h2 className="font-semibold text-2xl">Lookig for team</h2>
       </div>
