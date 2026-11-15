@@ -7,6 +7,9 @@ import Profile from "./pages/Profile"
 import MyProjects from "./pages/MyProjects"
 import MyApplications from "./pages/MyApplications"
 import UserLayout from "./layout/UserLayout"
+import ProjectInfo from "./pages/ProjectInfo"
+import Apply from "./pages/Apply"
+import ReviewApplications from "./pages/ReviewApplications"
 
 const App = () => {
   return (
@@ -20,6 +23,9 @@ const App = () => {
         <Route path="profile" element = {<Profile/>}/>
         <Route path="my-projects" element={<MyProjects/>} />
         <Route path="my-applications" element={<MyApplications/>}/>
+        <Route path="projct-info" element={<ProjectInfo/>}/>
+        <Route path="apply" element={<Apply/>}/>
+        <Route path="review-applications" element={<ReviewApplications/>}/>
        </Route>
       </Routes>
     </div>

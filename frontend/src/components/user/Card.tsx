@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const Card = () => {
   const bg = [
     "bg-linear-[135deg] from-[#2F4BE0] to-[#8FA2FF]",
@@ -7,6 +9,8 @@ const Card = () => {
     "bg-linear-[135deg] from-[#1D4ED8] to-[#F9A8D4]",
   ];
   const random = Math.floor(Math.random() * 5);
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-70 w-full bg-[#FFFFFF] border-[#E4E1D9] border rounded-[14px] shrink-0 overflow-hidden">
       <div className={`h-35 ${bg[random]} relative`}>
@@ -50,7 +54,9 @@ const Card = () => {
         </div>
 
         <div className="font-medium flex gap-2 pt-2 w-full">
-          <button className="bg-[#2F4BE0] text-white w-[70%] border-[#DAD7CF] rounded-[10px] p-2">
+          <button
+          onClick={()=> navigate("/projct-info")}
+           className="bg-[#2F4BE0] text-white w-[70%] border-[#DAD7CF] rounded-[10px] p-2">
             View
           </button>
           <button className="bg-white text-[#16151A] border border-[#DAD7CF]  rounded-[10px] w-[30%] p-2">

@@ -7,7 +7,7 @@ const Profile = () => {
   const tech = ["React", "MongoDb", "Java", "Tailiwnd"];
   const navigate = useNavigate();
   return (
-    <div className="h-full w-full flex py-5 flex-col pb-20 gap-8">
+    <div className="h-full w-full flex py-3 flex-col pb-20 gap-8">
       <ProfilePicture />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
@@ -29,10 +29,11 @@ const Profile = () => {
         <button className="w-full bg-[#2F4BE0] text-white rounded-xl py-3">
           Edit Profile
         </button>
+       
         <button onClick={()=> navigate("/my-projects")} className="w-full border border-[#DAD7CF] rounded-xl text-[#16151A] py-3">
           My Projects
         </button>
-        <button className="w-full border border-[#DAD7CF] text-[#16151A] rounded-xl py-3">
+        <button onClick={()=> navigate("/my-applications")} className="w-full border border-[#DAD7CF] text-[#16151A] rounded-xl py-3">
           My Applications
         </button>
         <button className="w-full border border-[#F0C4BF] text-[#B42318] py-3 rounded-xl">
