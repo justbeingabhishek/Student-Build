@@ -1,11 +1,13 @@
+import { success } from "zod";
 import User from "../models/User.Model.js"
 
 import updateProfileSchema from "../validations/userValidation.js"
+import Project from "../models/Project.Model.js";
 
 const getUserProfile = async (req,res)=>{
     const userid = req.userid;
     try{
-        const user = await User.findById(req.userid)
+        const user = await User.findById(userid).select("-password");
 
         if(!user){
             return res.status(404).json({
@@ -27,6 +29,8 @@ const getUserProfile = async (req,res)=>{
 
 const updateUserProfile = async (req,res)=>{
     const userid = req.userid;
+    
+
     try{
          const result = await updateProfileSchema.safeParse(req.body);
          if(!result.success){
@@ -37,7 +41,7 @@ const updateUserProfile = async (req,res)=>{
         else{
          const {name,college,year,bio,skills,github,portfolio} = result.data;
 
-         const updatedUserProfile = await User.findByIdAndUpdate(req.userid,
+         const updatedUserProfile = await User.findByIdAndUpdate(userid,
             {$set:result.data},
             {new:true, runValidators:true})
         
@@ -57,6 +61,7 @@ const updateUserProfile = async (req,res)=>{
 }
 
 const getUserById = async(req,res)=>{
+    
     const userId = req.params.id;
     try{
         const user = await User.findById(userId);
@@ -77,4 +82,43 @@ const getUserById = async(req,res)=>{
         })
     }
 }
-export {getUserProfile,updateUserProfile,getUserById}
+
+
+const getUserProject = async(req,res)=>{
+    try{
+        const userId = req.userid;
+
+        console.log("userid : ",userId);
+        if(!userId){
+            return res.status(401).json({
+                success : false,
+                message  : "Unable to fetch projects"
+            })
+        }
+
+        const projects = await Project.find({
+            owner : userId
+        })
+
+        if(projects.length==0){
+            return res.status(401).json({
+                success:false,
+                message : "0 projects under this user id"
+            })
+        }
+
+        res.status(200).json({
+            success : true,
+            projects
+        })
+
+    }catch(err){
+        console.log("error : ",err.message);
+        res.status(500).json({
+            success : false,
+            message : "Internal server error"
+        })
+    }
+}
+
+export {getUserProfile,getUserProject,updateUserProfile,getUserById}

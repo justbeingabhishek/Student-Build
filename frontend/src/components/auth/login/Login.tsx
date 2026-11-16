@@ -1,5 +1,10 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { userContext } from "../../../context/UserContext";
+
+import api from "../../../../Services/api.ts";
+
+import { useContext, useState } from "react";
 
 type LoginFormData = {
   email: string;
@@ -14,11 +19,24 @@ const Login = () => {
   } = useForm<LoginFormData>();
 
   const navigate = useNavigate();
+  const { setUser  } : any = useContext(userContext);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (data: LoginFormData) => {
-    console.log("LOGIN DATA:", data);
-    navigate("/"); // Redirect to home page after successful login
-    // Add login API here
+  const handleLogin = async(data: LoginFormData) => {
+    try {
+      const response = await api.post(`/auth/login`, data , {
+        withCredentials: true,
+      });
+      console.log("LOGIN RESPONSE:", response.data);
+      if(response.data.success){
+        const { user } = response.data;
+        setUser(user);
+        navigate("/");
+      }
+    } catch (error) {
+      setError((error as any).response?.data?.message || "Login failed. Please try again.");
+      console.error("LOGIN ERROR:", error);
+    }
   };
 
   return (
@@ -86,6 +104,14 @@ const Login = () => {
                 },
               })}
             />
+
+            {
+              error && (
+                <span className="mt-1 text-sm text-red-500">
+                  {error}
+                </span>
+              )
+            }
 
             {errors.password && (
               <span className="mt-1 text-sm text-red-500">

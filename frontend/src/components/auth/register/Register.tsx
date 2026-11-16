@@ -1,8 +1,11 @@
 import { useForm } from "react-hook-form";
 
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import api from "../../../../Services/api.ts";
+
 interface SignupFormValues {
-  fullName: string;
-  university: string;
+  name: string;
   email: string;
   password: string;
 }
@@ -12,14 +15,23 @@ const Signup = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupFormValues>({
-    defaultValues: {
-      university: "Graphic Era Hill University",
-    },
-  });
+  } = useForm<SignupFormValues>({});
 
-  const handleSignup = (data: SignupFormValues) => {
+  const navigate = useNavigate();
+
+  const handleSignup = async(data: SignupFormValues) => {
     console.log("SIGNUP DATA:", data);
+    try{
+      const response = await api.post("/auth/signup", data);
+      if(response.data.success){
+        toast.success("Signup successful! Please log in.");
+        navigate("/login");
+        console.log("User signed up successfully:", response.data.user);
+      }
+      console.log("SIGNUP RESPONSE:", response.data);
+    }catch(error){
+      console.error("SIGNUP ERROR:", error);
+    }
 
     // Add signup API here
   };
@@ -55,7 +67,7 @@ const Signup = () => {
               type="text"
               placeholder="Enter your full name"
               className="h-14 w-full rounded-xl border border-[#d4d0c7] bg-white px-4 text-base outline-none focus:border-[#3048e8] md:h-16.5 md:rounded-4 md:px-4.75 md:text-[20px]"
-              {...register("fullName", {
+              {...register("name", {
                 required: "Full name is required",
                 minLength: {
                   value: 2,
@@ -64,31 +76,9 @@ const Signup = () => {
               })}
             />
 
-            {errors.fullName && (
+            {errors.name && (
               <span className="mt-1 text-sm text-red-500">
-                {errors.fullName.message}
-              </span>
-            )}
-          </div>
-
-          {/* University */}
-          <div className="mb-4.75 flex flex-col">
-            <label className="mb-2.25 text-base font-semibold md:text-[18px]">
-              University
-            </label>
-
-            <input
-              type="text"
-              placeholder="Enter your university"
-              className="h-14 w-full rounded-xl border border-[#d4d0c7] bg-white px-4 text-base outline-none focus:border-[#3048e8] md:h-16.5 md:rounded-2xl md:px-4.75 md:text-[20px]"
-              {...register("university", {
-                required: "University is required",
-              })}
-            />
-
-            {errors.university && (
-              <span className="mt-1 text-sm text-red-500">
-                {errors.university.message}
+                {errors.name.message}
               </span>
             )}
           </div>

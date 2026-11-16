@@ -12,17 +12,23 @@ import Apply from "./pages/Apply";
 import ReviewApplications from "./pages/ReviewApplications";
 import Login from "./components/auth/login/Login";
 import Signup from "./components/auth/register/Register";
+import UserProtectedRoute from "./protectedRoutes/UserProtectedRoute";
+import { useContext } from "react";
+import { userContext } from "./context/UserContext";
 
 const App = () => {
+  const {user  , loading } : any = useContext(userContext);
+  console.log("user : ",user);
   return (
-    <div className="">
+      loading ? <span>Loading... </span> : 
+      <div>
       <Routes>
         {/* common routes  */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Signup />} />
 
         {/* user routes */}
-        <Route path="/" element={<UserLayout />}>
+        <Route path="/" element={<UserProtectedRoute user={user}><UserLayout /></UserProtectedRoute>}>
           <Route index element={<Home />} />
           <Route path="explore" element={<Explore />} />
           <Route path="post" element={<Post />} />
@@ -30,7 +36,7 @@ const App = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="my-projects" element={<MyProjects />} />
           <Route path="my-applications" element={<MyApplications />} />
-          <Route path="projct-info" element={<ProjectInfo />} />
+          <Route path="project-info/:id" element={<ProjectInfo />} />
           <Route path="apply" element={<Apply />} />
           <Route path="review-applications" element={<ReviewApplications />} />
 

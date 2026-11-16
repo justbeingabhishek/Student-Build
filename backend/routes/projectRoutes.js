@@ -4,6 +4,7 @@ import {projects,
     getProjects, 
     getProjectById,
      updateOneProject,
+     searchProject,
       deleteProject} from "../controllers/projectController.js";
 
 import { applyToProject } from "../controllers/applicationController.js";
@@ -24,5 +25,9 @@ router.get("/:id",authMiddleware,getProjectById);
 router.put("/:id",authMiddleware, updateOneProject);
 //delete project
 router.delete("/:id",authMiddleware,deleteProject);
+
+
+// search project
+router.get("/search/project",authMiddleware,searchProject)
 
 export default router
