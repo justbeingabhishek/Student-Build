@@ -16,13 +16,16 @@ const userSchema = new mongoose.Schema({
         select:false
     },
     college : {
-        type:String
+        type:String,
+        default : ""
     },
     year:{
-        type:Number
+        type:Number,
+        default: 0
     },
     bio:{
         type:String,
+        default : ""
        
     },
     skills:{
@@ -31,16 +34,28 @@ const userSchema = new mongoose.Schema({
     },
     github:{
         type:String,
-       
+        default : ""
     },
     portfolio:{
         type:String,
-       
+        default : ""
     },
     createdAt: {
         type:Date,
         default:Date.now
     },
+    profile : {
+        type:String,  
+        required:true 
+    },
+    applications : {
+        type:[mongoose.Schema.Types.ObjectId],
+        ref:'Applications',
+    },
+    MyProjects : [{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Project',
+    } ]
 });
 
 const User = mongoose.model('Users',userSchema);

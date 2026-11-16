@@ -2,23 +2,28 @@ import { useNavigate } from "react-router-dom";
 import ProfileInfo from "../components/user/ProfileInfo";
 import ProfilePicture from "../components/user/ProfilePicture";
 import TechStack from "../components/user/TechStack";
+import { userContext } from "../context/UserContext";
+import { useContext } from "react";
 
 const Profile = () => {
-  const tech = ["React", "MongoDb", "Java", "Tailiwnd"];
+  const {user} =  useContext(userContext) as any;
+
+  const tech = user.techStack || ["React", "Node.js", "MongoDB", "Express", "TypeScript", "JavaScript"];
+
   const navigate = useNavigate();
   return (
     <div className="h-full w-full flex py-3 flex-col pb-20 gap-8">
-      <ProfilePicture />
+      <ProfilePicture user={user} />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
 
-        <ProfileInfo type="Projects" count={2} />
-        <ProfileInfo type="Applications" count={3} />
+        <ProfileInfo type="Projects" count={user?.MyProjects.length} />
+        <ProfileInfo type="Applications" count={user?.applications.length} />
         <ProfileInfo type="Teammates" count={0} />
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        {tech.map((name, idx) => {
+        {tech.map((name : any, idx : number) => {
           return <TechStack key={idx} tech={name} />;
         })}
       </div>

@@ -1,18 +1,18 @@
 import { useNavigate } from "react-router-dom"
 
-const ProjectCard = () => {
+const ProjectCard = ({project} : any) => {
     const navigate = useNavigate();
 
   return (
     <div className="bg-white border border-[#E4E1D9] w-full flex flex-col  rounded-[14px] p-3.5 ">
         {/* project name */}
         <div className="w-full flex justify-between">
-            <span className="font-bold text-[16px] text-[#16151A]">Alog Visualizer</span>
+            <span className="font-bold text-[16px] text-[#16151A]">{project?.title}</span>
             <span className="text-[12px] font-semibold rounded-md px-0.75 flex items-center bg-[#ECEAE3] text-[#3D3A44]  ">Recruiting</span>
         </div>
 
         <div>
-            <span className="text-[13px] text-[#5C5964] mt-1">N pending · N team members</span>
+            <span className="text-[13px] text-[#5C5964] mt-1">{project?.teamSize - project?.team?.length} pending · {project?.teamSize} team members</span>
         </div>
 
         <div>

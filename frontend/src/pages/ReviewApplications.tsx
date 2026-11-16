@@ -2,12 +2,10 @@ import { useState } from "react";
 import ReviewCard from "../components/ui/ReviewCard";
 
 const ReviewApplications = () => {
-    const filters = [ "Pending",
-  "Accepted",
-  "Rejected",];
-  const [counts,setCount] = useState(1);
-  
-  const [activeFilter,setActiveFilter] = useState("Pending");
+  const filters = ["Latest", "Oldest"];
+  const [counts, setCount] = useState(1);
+
+  const [activeFilter, setActiveFilter] = useState("Latest");
   return (
     <div className="h-full w-full flex py-3 flex-col  pb-20  gap-8">
       <div>
@@ -25,13 +23,13 @@ const ReviewApplications = () => {
               min-h-9 rounded-full border px-3.5
               text-[13px] font-medium cursor-pointer transition-colors
               ${
-                activeFilter==filter
+                activeFilter == filter
                   ? "border-[#16151A] bg-[#16151A] text-white"
                   : "border-[#DAD7CF] bg-white text-[#16151A] hover:bg-[#F7F6F2]"
               }
             `}
               >
-                {filter} ({counts})
+                {filter} 
               </button>
             );
           })}
