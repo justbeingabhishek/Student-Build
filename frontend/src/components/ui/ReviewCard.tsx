@@ -1,5 +1,7 @@
-
 import { Link2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "../../../Services/api";
+import { toast } from "sonner";
 
 type ApplicationStatus = "Pending" | "Accepted" | "Rejected";
 
@@ -10,11 +12,10 @@ interface ReviewCardProps {
   avatarColor?: string;
   message: string;
   portfolio: string;
-  hours: string;
   skills: string[];
-  status?: ApplicationStatus;
-  onAccept?: () => void;
-  onReject?: () => void;
+  status: string;
+  id: string;
+  fetchApplcation : any
 }
 
 const ReviewCard = ({
@@ -24,15 +25,32 @@ const ReviewCard = ({
   avatarColor = "#7C3AED",
   message,
   portfolio,
-  hours,
   skills,
-  status = "Pending",
-  onAccept,
-  onReject,
+  status,
+  id,
+  fetchApplcation
 }: ReviewCardProps) => {
+  console.log("postfolio : ", portfolio);
+
+
+  async function updateStatus(data : string){
+    console.log("data  : ",data);
+    try {
+      const response = await api.put(`/application/status/${id}`,{status : data});
+      toast.success(response.data.message);
+      fetchApplcation();
+    } catch (error) {
+      console.log("error ");
+      toast.error((error as any).response.data.message);
+    }
+  }
+
+
+
+
+
   return (
     <div className="w-full rounded-[14px] border border-[#E4E1D9] bg-white p-3.5">
-
       {/* Header */}
       <div className="flex items-center gap-2.5">
         <div
@@ -43,12 +61,8 @@ const ReviewCard = ({
         </div>
 
         <div className="min-w-0">
-          <h3 className="text-[16px] font-bold text-[#16151A]">
-            {name}
-          </h3>
-          <p className="text-[13px] text-[#5C5964]">
-            {role}
-          </p>
+          <h3 className="text-[16px] font-bold text-[#16151A]">{name}</h3>
+          <p className="text-[13px] text-[#5C5964]">{role}</p>
         </div>
       </div>
 
@@ -63,25 +77,23 @@ const ReviewCard = ({
         </p>
       </div>
 
-      {/* Portfolio and Hours */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-2">
-        <a
-          href={portfolio}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={portfolio}
-          className="inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-full border border-[#DAD7CF] bg-white px-3 text-[13px] font-semibold text-[#2F4BE0] no-underline"
-        >
-          <Link2 size={14} strokeWidth={2} className="shrink-0" />
-          <span className="truncate">
-            {portfolio.replace(/^https?:\/\//, "")}
-          </span>
-        </a>
+      {portfolio && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          <a
+            href={portfolio}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={portfolio}
+            className="inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-full border border-[#DAD7CF] bg-white px-3 text-[13px] font-semibold text-[#2F4BE0] no-underline"
+          >
+            <Link2 size={14} strokeWidth={2} className="shrink-0" />
 
-        <span className="rounded-md bg-[#ECEAE3] px-2 py-0.75 text-[12px] font-semibold text-[#3D3A44]">
-          {hours}
-        </span>
-      </div>
+            <span className="truncate">
+              {portfolio.replace(/^https?:\/\//, "")}
+            </span>
+          </a>
+        </div>
+      )}
 
       {/* Skills */}
       <p className="mt-2.5 text-[13px] text-[#5C5964]">
@@ -89,19 +101,22 @@ const ReviewCard = ({
       </p>
 
       {/* Actions - Pending only */}
-      {status === "Pending" && (
+      {status === "pending" && (
         <div className="mt-3 flex gap-2">
           <button
-            onClick={onAccept}
+            onClick={() => {
+              updateStatus("accepted");
+            }}
             className="min-h-11 flex-1 rounded-[10px] bg-[#2F4BE0] px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#243BC0]"
           >
             Accept
           </button>
 
           <button
-            onClick={onReject}
-            className="min-h-11 flex-1 rounded-[10px] border border-[#F0C4BF] bg-white px-4 text-[14px] font-semibold text-[#B42318] transition-colors hover:bg-[#FFF5F4]"
-          >
+          onClick={() => {
+             updateStatus("rejected");
+          }}
+           className="min-h-11 flex-1 rounded-[10px] border border-[#F0C4BF] bg-white px-4 text-[14px] font-semibold text-[#B42318] transition-colors hover:bg-[#FFF5F4]">
             Reject
           </button>
         </div>

@@ -100,12 +100,6 @@ const getUserProject = async(req,res)=>{
             owner : userId
         })
 
-        if(projects.length==0){
-            return res.status(401).json({
-                success:false,
-                message : "0 projects under this user id"
-            })
-        }
 
         res.status(200).json({
             success : true,

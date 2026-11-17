@@ -17,6 +17,7 @@
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.92.0",
     "react-router-dom": "^7.18.5",
+    "react-spinners": "^0.17.1",
     "sonner": "^2.0.8",
     "tailwindcss": "^4.3.5"
   },

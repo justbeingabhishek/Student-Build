@@ -37,7 +37,7 @@ const Card = ({ project }: any) => {
         {/* information */}
         <div className="w-full flex  text-[13px]  justify-between text-[#5C5964] ">
           <span>{project?.owner?.name || "raka"}</span>
-          <span>{project?.rolesNeeded?.length || 0} applications</span>
+          <span>{project?.application || 0} applications</span>
         </div>
 
         {/* titel */}
