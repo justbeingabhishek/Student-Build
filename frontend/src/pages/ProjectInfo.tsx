@@ -15,13 +15,12 @@ const ProjectInfo = () => {
     "bg-linear-[135deg] from-[#1D4ED8] to-[#F9A8D4]",
   ];
 
-
   const random = Math.floor(Math.random() * 5);
   const navigate = useNavigate();
   const [project, setProject] = useState<any>(null);
   const { id } = useParams();
 
-  const {setApplicationInfo}  : any  = useContext(userContext);
+  const { setApplicationInfo }: any = useContext(userContext);
 
   const fetchProjectInformation = async () => {
     try {
@@ -39,14 +38,12 @@ const ProjectInfo = () => {
 
   const gradient = project?.coverImage;
 
-
-  
- (project?.team) ? project.team = [{id : project?.owner?._id,name : project?.owner?.name}] : "";
+  project?.team
+    ? (project.team = [{ id: project?.owner?._id, name: project?.owner?.name }])
+    : "";
 
   const from = gradient?.match(/from-\[(#[0-9A-Fa-f]{6})\]/)?.[1];
   const to = gradient?.match(/to-\[(#[0-9A-Fa-f]{6})\]/)?.[1];
-
-  console.log("Project Information:", project);
 
   return (
     <div className="h-full w-full flex py-3 flex-col  pb-20  gap-4">
@@ -66,10 +63,13 @@ const ProjectInfo = () => {
         <span className="text-[26px] capitalize font-bold tracking-[-0.02em]">
           {project?.title || "Study Sync"}
         </span>
-        <div className="text-[13px] text-[#5C5964] mt-1">
-          By <span>{project?.owner?.name || "Unknown"}</span> · Recruiting ·{" "}
-          <span>{project?.rolesNeeded?.length || 0} applicants</span> ·{" "}
-          <span>{project?.teamSize || 0} members</span>
+        <div className="text-[13px] flex flex-col gap-2 text-[#5C5964] mt-1">
+          <span>By {project?.owner?.name || "Unknown"}</span>
+          <div className="capitalize">
+            <span>{project?.application} application</span> ·{" "}
+            <span>{project?.rolesNeeded?.length || 0} Roles</span> ·{" "}
+            <span>{project?.teamSize || 0} members</span>
+          </div>
         </div>
       </div>
 
@@ -89,9 +89,15 @@ const ProjectInfo = () => {
       <div>
         <span className="text-[16px] font-bold ">Roles needed</span>
         <div className="flex flex-col gap-2 mt-2.5">
-
           {project?.rolesNeeded?.map((role: any, idx: number) => (
-            <RoleCard  key={idx} role={role} />
+            <RoleCard
+              ownProject={project?.ownProject}
+              key={idx}
+              applied={project?.applied}
+              applicationStatus={project?.applicationStatus}
+              appliedFor={project?.role}
+              role={role}
+            />
           ))}
         </div>
       </div>
@@ -100,12 +106,9 @@ const ProjectInfo = () => {
       {/* 40×40 circle, centered white initials, Inter 14px weight 700, never shrinks */}
       <div>
         <span className="text-[16px] font-bold text-[#16151A]">Team</span>
-        {
-          project?.team.map((data: any,idx :number)=>{
-            return <TeamMates key={idx} data = {data}/>
-          })
-        }
-   
+        {project?.team.map((data: any, idx: number) => {
+          return <TeamMates key={idx} data={data} />;
+        })}
       </div>
     </div>
   );

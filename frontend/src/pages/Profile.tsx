@@ -17,9 +17,8 @@ const Profile = () => {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
 
-        <ProfileInfo type="Projects" count={user?.MyProjects.length} />
-        <ProfileInfo type="Applications" count={user?.applications.length} />
-        <ProfileInfo type="Teammates" count={0} />
+        <ProfileInfo type="Projects" count={user?.MyProjects?.length} />
+        <ProfileInfo type="Applications" count={user?.Myapplications?.length} />
       </div>
 
       <div className="flex gap-2 flex-wrap">

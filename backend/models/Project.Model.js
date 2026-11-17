@@ -1,4 +1,5 @@
 import mongoose  from "mongoose";
+import { number } from "zod";
 
 const projectSchema = new mongoose.Schema({
     title:{
@@ -36,6 +37,10 @@ const projectSchema = new mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now
+    },
+    application : {
+        type : number,
+        default : 0
     },
     category:{
         type:String,

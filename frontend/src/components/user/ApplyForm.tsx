@@ -1,4 +1,9 @@
 import { useForm } from "react-hook-form";
+import api from "../../../Services/api";
+import { useContext, useState } from "react";
+import { userContext } from "../../context/UserContext";
+import { toast } from "sonner";
+
 
 const ApplyForm = () => {
   const {
@@ -8,12 +13,27 @@ const ApplyForm = () => {
     reset,
   } = useForm();
 
+  const {applicationInfo} : any = useContext(userContext);
+  const [loading,setLoading] = useState(false);
 
   const sendApplication = async(data : any)=>{
+    setLoading(true);
     try {
         console.log("data : ",data);
+        data.role = applicationInfo.role;
+        data.owner = applicationInfo.owner._id;
+        data.project = applicationInfo._id;
+        console.log("data : ",data);
+        const response = await api.post('/application/project/apply',data);
+        if(response?.data.success){
+          toast.success("Application submited");
+          reset();
+        }
     } catch (error) {
       console.log("Error",(error as any).message);
+      toast.error((error as any)?.response?.data?.message || "internal server error");
+    }finally{
+      setLoading(false);
     }
   }
 
@@ -90,7 +110,7 @@ const ApplyForm = () => {
       <span className="text-[13px] text-[#B42318]">Must not be empty</span>
 
       <button type="submit" className="w-full text-center bg-[#2F4BE0] p-3 text-white rounded-[10px] min-h-11 mt-5">
-        Submit application
+        {loading ? "Submiting application" : "Submit application"}
       </button>
     </form>
   );

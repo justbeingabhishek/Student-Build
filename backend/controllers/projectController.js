@@ -5,6 +5,7 @@ import {
 import Project from "../models/Project.Model.js";
 import User from "../models/User.Model.js";
 import { success } from "zod";
+import mongoose from "mongoose";
 const bg = [
   "bg-linear-[135deg] from-[#2F4BE0] to-[#8FA2FF]",
   "bg-linear-[135deg] from-[#0F766E] to-[#6EE7B7]",
@@ -117,28 +118,137 @@ const getProjects = async (req, res) => {
 };
 
 // getting project by id route
+
+
 const getProjectById = async (req, res) => {
   const projectId = req.params.id;
-  const userid = req.userid;
+  const userId = req.userid;
 
   try {
-    const project = await Project.findById(projectId).populate("owner");
-    if (project) {
-      return res.status(200).json({
-        message: "Project found",
-        project,
-      });
-    } else {
-      return res.status(404).json({
-        message: "Project  not found,",
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(400).json({
+        message: "Invalid project ID",
       });
     }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(401).json({
+        message: "Invalid or missing user ID",
+      });
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const project = await Project.aggregate([
+      // Find project by ID
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(projectId),
+        },
+      },
+
+      // Populate project owner
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+        },
+      },
+      {
+        $unwind: {
+          path: "$owner",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Find current user's application
+      {
+        $lookup: {
+          from: "applications",
+          let: {
+            projectId: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$project", "$$projectId"] },
+                    { $eq: ["$user", userObjectId] },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                role: 1,
+                status: 1,
+              },
+            },
+          ],
+          as: "userApplication",
+        },
+      },
+
+      // Add custom fields
+      {
+        $addFields: {
+          ownProject: {
+            $eq: ["$owner._id", userObjectId],
+          },
+
+          applied: {
+            $gt: [{ $size: "$userApplication" }, 0],
+          },
+
+          applicationStatus: {
+            $ifNull: [
+              { $arrayElemAt: ["$userApplication.status", 0] },
+              null,
+            ],
+          },
+
+          role: {
+            $ifNull: [
+              { $arrayElemAt: ["$userApplication.role", 0] },
+              null,
+            ],
+          },
+        },
+      },
+
+      // Remove temporary field
+      {
+        $project: {
+          userApplication: 0,
+        },
+      },
+    ]);
+
+    if (!project.length) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Project found",
+      project: project[0],
+    });
+
   } catch (error) {
+    console.error("Get project by ID error:", error);
+
     return res.status(500).json({
-      message: " Could not fetch projects,",
+      message: "Could not fetch project",
     });
   }
 };
+
+
 
 //update existing project
 const updateOneProject = async (req, res) => {
@@ -267,6 +377,7 @@ const searchProject = async (req, res) => {
     });
   }
 };
+
 
 export {
   projects,

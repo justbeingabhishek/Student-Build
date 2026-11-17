@@ -18,6 +18,7 @@ router.post("/",authMiddleware,projects)
 //get all projects
 router.get("/",authMiddleware,getProjects);
 
+
 //get project by id
 router.get("/:id",authMiddleware,getProjectById);
 

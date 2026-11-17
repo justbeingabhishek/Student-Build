@@ -18,7 +18,7 @@ export const UserContextProvider = ({
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [projects, setProjcts] = useState<any[]>([]);
-  const [applicationInfo,setApplicationInfo] = useState({});
+  const [applicationInfo,setApplicationInfo] = useState(null);
 
   const value = {
     user,

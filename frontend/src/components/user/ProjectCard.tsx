@@ -16,7 +16,7 @@ const ProjectCard = ({project} : any) => {
         </div>
 
         <div>
-            <button className="bg-[#2F4BE0] font-semibold px-2 text-white rounded-[10px] min-h-11 mt-2.5 " onClick={()=> navigate("/review-applications")} >View applications</button>
+            <button className="bg-[#2F4BE0] font-semibold px-2 text-white rounded-[10px] min-h-11 mt-2.5 " onClick={()=> navigate(`/review-applications/${project?._id}`)} >View applications</button>
         </div>
     </div>
   )

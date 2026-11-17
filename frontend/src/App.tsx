@@ -37,8 +37,8 @@ const App = () => {
           <Route path="my-projects" element={<MyProjects />} />
           <Route path="my-applications" element={<MyApplications />} />
           <Route path="project-info/:id" element={<ProjectInfo />} />
-          <Route path="apply" element={<Apply />} />
-          <Route path="review-applications" element={<ReviewApplications />} />
+          <Route path="apply/:id" element={<Apply />} />
+          <Route path="review-applications/:id" element={<ReviewApplications />} />
 
           <Route path="*" element={<div>404 Not Found</div>} />
         </Route>
