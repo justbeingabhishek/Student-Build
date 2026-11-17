@@ -18,6 +18,7 @@ export const UserContextProvider = ({
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [projects, setProjcts] = useState<any[]>([]);
+  const [applicationInfo,setApplicationInfo] = useState({});
 
   const value = {
     user,
@@ -26,6 +27,8 @@ export const UserContextProvider = ({
     setLoading,
     projects,
     setProjcts,
+    applicationInfo,
+    setApplicationInfo
   };
 
   const fetchUser = async () => {

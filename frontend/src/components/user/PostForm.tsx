@@ -8,6 +8,7 @@ const PostForm = () => {
   const [select, setSelect] = useState("Web");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
   const {
     handleSubmit,
     register,
@@ -59,9 +60,9 @@ const PostForm = () => {
           id="title"
         />
       </div>
-      {errors.titel && (
+      {errors.title && (
         <span className="mt-1 text-sm text-red-500">
-          {String(errors.titel.message) || "Project title is required"}
+          {String(errors.title.message) || "Project title is required"}
         </span>
       )}
 

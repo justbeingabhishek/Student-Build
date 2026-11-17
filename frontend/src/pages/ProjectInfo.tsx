@@ -2,8 +2,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import RoleCard from "../components/user/RoleCard";
 import Back from "../components/ui/Back";
 import TeamMates from "../components/ui/TeamMates";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import api from "../../Services/api";
+import { userContext } from "../context/UserContext";
 
 const ProjectInfo = () => {
   const bg = [
@@ -20,10 +21,13 @@ const ProjectInfo = () => {
   const [project, setProject] = useState<any>(null);
   const { id } = useParams();
 
+  const {setApplicationInfo}  : any  = useContext(userContext);
+
   const fetchProjectInformation = async () => {
     try {
       const response = await api.get(`/projects/${id}`);
       setProject(response.data.project);
+      setApplicationInfo(response.data.project);
     } catch (error) {
       console.error("Error fetching project information:", error);
     }
@@ -87,7 +91,7 @@ const ProjectInfo = () => {
         <div className="flex flex-col gap-2 mt-2.5">
 
           {project?.rolesNeeded?.map((role: any, idx: number) => (
-            <RoleCard key={idx} role={role} />
+            <RoleCard  key={idx} role={role} />
           ))}
         </div>
       </div>
