@@ -2,8 +2,9 @@ import { application } from "express";
 import Application from "../models/Application.Model.js";
 import Project from "../models/Project.Model.js";
 import applicationStatusSchema from "../validations/applicationStatusvalidation.js";
-import { success } from "zod";
+import { email, success } from "zod";
 import User from "../models/User.Model.js";
+import { sendMail } from "../services/api.js";
 
 const applyToProject = async (req, res) => {
   const userid = req.userid;
@@ -154,7 +155,7 @@ const updateApplicationStatus = async (req, res) => {
 
     console.log("request reaches the server : ");
 
-    const status  = req.body.status;
+    const status = req.body.status;
 
     if (!status) {
       return res.status(401).json({
@@ -163,43 +164,48 @@ const updateApplicationStatus = async (req, res) => {
       });
     }
 
+    const application = await Application.findById(applicationId)
+      .populate("user", "name email")
+      .populate("owner", "name email _id")
+      .populate("project", "title description");
 
-    const application = await Application.findById(applicationId);
-
-    if(!application){
+    if (!application) {
       return res.status(403).json({
-        success :false,
-        message : "Application with this id not exists"
-      })
+        success: false,
+        message: "Application with this id not exists",
+      });
     }
-    
-    if(userid!==application.owner.toString()){
+
+
+    if (userid !== application.owner._id.toString()) {
       return res.status(401).json({
-        success : false,
-        message  : "Anoutharized action"
-      })
+        success: false,
+        message: "Anoutharized action",
+      });
     }
 
     application.status = status.toLowerCase();
     application.save();
 
-    await Project.findByIdAndUpdate(application.project,{
-      $push : {"team" : application.user}
-    })
+    await Project.findByIdAndUpdate(application.project, {
+      $push: { team: application.user },
+    });
+
+    // (userName,projectName,role,ownerName),
+
+    sendMail(application?.email,application?.user?.name,application?.project.title,application.role,application?.owner?.name);
 
     res.status(200).json({
-      success :true,
-      message : "Status updated successfully"
-    })
-
-  } catch(error) {
-    console.log("error : ",error.message);
-      res.status(500).json({
-        success :false,
-        message : "Internal server error"
-      })
+      success: true,
+      message: "Status updated successfully",
+    });
+  } catch (error) {
+    console.log("error : ", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
-  
 };
 export {
   applyToProject,
