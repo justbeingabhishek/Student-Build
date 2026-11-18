@@ -1,6 +1,16 @@
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, FolderKanban, LogOut, Pencil } from "lucide-react";
+import { isAxiosError } from "axios";
+import {
+  ClipboardList,
+  FolderKanban,
+  LoaderCircle,
+  LogOut,
+  Pencil,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import api from "../../Services/api";
 import ProfileInfo from "../components/user/ProfileInfo";
 import ProfilePicture from "../components/user/ProfilePicture";
 import { userContext } from "../context/UserContext";
@@ -21,11 +31,28 @@ interface ProfileUser {
 }
 
 const Profile = () => {
-  const context = useContext(userContext) as
-    | { user: ProfileUser | null }
-    | undefined;
+  const context = useContext(userContext);
   const navigate = useNavigate();
-  const user = context?.user;
+  const [loggingOut, setLoggingOut] = useState(false);
+  const user = context?.user as ProfileUser | null | undefined;
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await api.post("/auth/logout");
+      context?.setUser(null);
+      toast.success("You have been logged out.");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      const message = isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message || "Unable to log out. Please try again."
+        : "Unable to log out. Please try again.";
+      toast.error(message);
+      console.error("Logout failed:", error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   if (!user) {
     return <p className="text-sm text-[#6B6872]">Loading profile...</p>;
@@ -105,10 +132,16 @@ const Profile = () => {
 
         <button
           type="button"
-          className="col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#F0C4BF] bg-white px-4 text-sm font-semibold text-[#B42318] transition hover:bg-[#FFF7F6]"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#F0C4BF] bg-white px-4 text-sm font-semibold text-[#B42318] transition hover:bg-[#FFF7F6] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          <LogOut size={17} />
-          Log out
+          {loggingOut ? (
+            <LoaderCircle size={17} className="animate-spin" />
+          ) : (
+            <LogOut size={17} />
+          )}
+          {loggingOut ? "Logging out..." : "Log out"}
         </button>
       </div>
     </div>

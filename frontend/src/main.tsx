@@ -8,7 +8,13 @@ import { Toaster } from "sonner";
 createRoot(document.getElementById("root")!).render(
   <UserContextProvider>
     <BrowserRouter>
-       <Toaster />
+      <Toaster
+        position="top-center"
+        richColors
+        closeButton
+        duration={4000}
+        visibleToasts={3}
+      />
       <App />
     </BrowserRouter>
   </UserContextProvider>,

@@ -105,4 +105,19 @@ const login = async (req, res) => {
     },
   });
 };
-export { signup, login };
+
+const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logout successful",
+  });
+};
+
+export { signup, login, logout };
