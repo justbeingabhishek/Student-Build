@@ -104,7 +104,10 @@ const projects = async (req, res) => {
 // getting  all projects route
 const getProjects = async (req, res) => {
   try {
-    const projects = await Project.find().populate("owner").sort(1).limit(30);
+    const projects = await Project.find()
+      .populate("owner")
+      .sort({ createdAt: -1 })
+      .limit(30);
     return res.status(200).json({
       message: "Projects fetched successfully",
       projects,

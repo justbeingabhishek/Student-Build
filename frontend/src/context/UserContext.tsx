@@ -49,7 +49,6 @@ export const UserContextProvider = ({
   console.log("hello");
 
   const fetchProjects = async () => {
-    setLoading(true);
     setProjectsLoading(true);
     setProjectsError(null);
     try {
@@ -61,7 +60,6 @@ export const UserContextProvider = ({
       setProjectsError("Unable to load projects. Please try again.");
     } finally {
       setProjectsLoading(false);
-      setLoading(false);
     }
   };
 

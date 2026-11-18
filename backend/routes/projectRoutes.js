@@ -18,6 +18,8 @@ router.post("/",authMiddleware,projects)
 //get all projects
 router.get("/",authMiddleware,getProjects);
 
+// search project
+router.get("/search/project",authMiddleware,searchProject)
 
 //get project by id
 router.get("/:id",authMiddleware,getProjectById);
@@ -27,8 +29,5 @@ router.put("/:id",authMiddleware, updateOneProject);
 //delete project
 router.delete("/:id",authMiddleware,deleteProject);
 
-
-// search project
-router.get("/search/project",authMiddleware,searchProject)
 
 export default router
