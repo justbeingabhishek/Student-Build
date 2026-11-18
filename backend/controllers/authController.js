@@ -3,6 +3,9 @@ import jwt from "jsonwebtoken";
 import { signupSchema, loginSchema } from "../validations/authValidation.js";
 import User from "../models/User.Model.js";
 
+const isProduction =
+  process.env.NODE_ENV === "production" || process.env.RENDER === "true";
+
 const signup = async (req, res) => {
   //Validate the request body using zod schema
   const result = signupSchema.safeParse(req.body);
@@ -86,8 +89,8 @@ const login = async (req, res) => {
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
