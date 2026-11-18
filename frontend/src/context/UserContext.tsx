@@ -46,6 +46,7 @@ export const UserContextProvider = ({
       setLoading(false);
     }
   };
+  console.log("hello");
 
   const fetchProjects = async () => {
     setLoading(true);
