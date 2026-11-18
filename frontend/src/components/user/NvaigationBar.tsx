@@ -1,6 +1,37 @@
 import { House, Search, CirclePlus, Bell, User } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { useContext, useEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import api from "../../../Services/api.ts";
+import { userContext } from "../../context/UserContext";
+
 const NvaigationBar = () => {
+  const context = useContext(userContext);
+  const location = useLocation();
+  const notificationCount = context?.notificationCount ?? 0;
+  const setNotificationCount = context?.setNotificationCount;
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await api.get("/notifications/unread-count", {
+          withCredentials: true,
+        });
+        if (active) {
+          setNotificationCount?.(response.data.unreadCount);
+        }
+      } catch (error) {
+        console.error("Unable to fetch unread notification count:", error);
+      }
+    };
+
+    void fetchUnreadCount();
+    return () => {
+      active = false;
+    };
+  }, [location.pathname, setNotificationCount]);
+
   const links = [
     {
       name: "Home",
@@ -40,11 +71,21 @@ const NvaigationBar = () => {
       {links.map((data,idx) => {
         return (
           <NavLink
-          key={idx}
+            key={idx}
             to={data.route}
             className="text-xs font-medium text-[#3D3A44] flex flex-col justify-center items-center"
           >
-            {data.icon}
+            <span className="relative">
+              {data.icon}
+              {data.name === "Alerts" && notificationCount > 0 && (
+                <span
+                  aria-label={`${notificationCount} unread notifications`}
+                  className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#B42318] px-1 text-[9px] font-bold leading-none text-white"
+                >
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </span>
+              )}
+            </span>
             {data.name}
           </NavLink>
         );

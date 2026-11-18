@@ -35,14 +35,14 @@ const Card = ({ project }: any) => {
       </div>
       <div className="px-2 flex-col flex gap-1 py-4">
         {/* information */}
-        <div className="w-full flex  text-[13px]  justify-between text-[#5C5964] ">
+        <div className="w-full flex capitalize  text-[13px]  justify-between text-[#5C5964] ">
           <span>{project?.owner?.name || "raka"}</span>
           <span>{project?.application || 0} applications</span>
         </div>
 
         {/* titel */}
         <div>
-          <span className="text-[18px] font-bold tracking-[-0.02em] ">
+          <span className="text-[18px] capitalize font-bold tracking-[-0.02em] ">
             {project?.title || "Project title"}
           </span>
         </div>

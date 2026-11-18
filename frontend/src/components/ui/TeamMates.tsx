@@ -1,16 +1,61 @@
-import { useContext } from "react"
-import { userContext } from "../../context/UserContext"
-
-const TeamMates = ({data} : any) => {
-  const {user} : any = useContext(userContext);
-  return (
-          <div className="flex items-center gap-2.5 mt-2.5">
-            <div className="h-10 w-10 bg-[#2F4BE0] text-white uppercase rounded-full flex justify-center items-center text-[14px] font-bold shrink-0">
-                {user?.name.slice(0,2)}
-            </div>
-            <span className="text-[14px] text-[#16151A] font-medium">{data?.name} {user?._id==data?.id ? "(owner)" : ""}</span>
-        </div>
-  )
+interface TeamMember {
+  _id: string;
+  name?: string;
+  profile?: string;
+  role?: string | null;
 }
 
-export default TeamMates
+const TeamMates = ({
+  data,
+  ownerId,
+}: {
+  data: TeamMember;
+  ownerId?: string;
+}) => {
+  const initials =
+    data.name
+      ?.trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "U";
+  const isOwner = ownerId === data._id;
+
+  return (
+    <article className="flex min-w-0 items-center gap-3 rounded-xl border border-[#EAE8E2] bg-[#FCFCFB] p-3 transition-colors hover:border-[#DAD7CF]">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-[#2F4BE0] text-sm font-bold uppercase text-white shadow-sm">
+        {data.profile ? (
+          <img
+            src={data.profile}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          initials
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-[#16151A]">
+          {data.name || "Unknown"}{" "}
+          <span className="font-normal text-[#5C5964]">
+            ({isOwner ? "Owner" : data.role || "Team member"})
+          </span>
+        </p>
+        <p className="mt-0.5 text-xs text-[#77747C]">
+          {isOwner ? "Project owner" : "Accepted team member"}
+        </p>
+      </div>
+
+      {isOwner && (
+        <span className="shrink-0 rounded-full bg-[#EEF1FF] px-2.5 py-1 text-[10px] font-semibold text-[#2F4BE0]">
+          Owner
+        </span>
+      )}
+    </article>
+  );
+};
+
+export default TeamMates;

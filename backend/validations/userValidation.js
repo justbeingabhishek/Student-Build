@@ -6,7 +6,7 @@ const updateProfileSchema = z.object({
     year:z.number().optional(),
     bio: z.string().optional(),
     skills: z.string().array().optional(),
-    github: z.url().optional(),
+    github:z.union([z.url(), z.literal("")]).optional(),
     portfolio:z.string().optional()
 })
 

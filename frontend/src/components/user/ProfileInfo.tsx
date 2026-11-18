@@ -6,15 +6,12 @@ interface ProfileInfoProps {
 const ProfileInfo = ({ type, count }: ProfileInfoProps) => {
   return (
     <div
-      className="bg-white border border-[#E4E1D9] 
-                    w-full min-w-0 rounded-[14px] 
-                    p-3 sm:p-4 
-                    flex justify-center items-center"
+      className="flex w-full min-w-0 items-center justify-center rounded-[12px] border border-[#E4E1D9] bg-white px-2 py-2"
     >
-      <div className="flex flex-col items-center gap-1">
-        <span className="text-xl sm:text-2xl font-bold">{count ?? 0}</span>
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="text-lg font-bold leading-5">{count ?? 0}</span>
 
-        <span className="text-xs sm:text-[13px] text-[#5C5964] text-center">
+        <span className="text-[10px] text-[#5C5964] text-center">
           {type || "Empty"}
         </span>
       </div>

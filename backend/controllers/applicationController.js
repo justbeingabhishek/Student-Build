@@ -5,15 +5,11 @@ import applicationStatusSchema from "../validations/applicationStatusvalidation.
 import { email, success } from "zod";
 import User from "../models/User.Model.js";
 import { sendMail } from "../services/api.js";
+import Notification from "../models/Notification.Model.js";
 
 const applyToProject = async (req, res) => {
   const userid = req.userid;
-
-  console.log("req.body : ", req.body);
-
   const result = applicationStatusSchema.safeParse(req.body);
-  console.log("result  : ", result);
-  const { reason, link, email, owner, project, role } = result.data;
 
   if (!result.success) {
     return res.status(400).json({
@@ -22,19 +18,10 @@ const applyToProject = async (req, res) => {
     });
   }
 
-  if (userid === owner) {
-    return res.status(401).json({
-      success: false,
-      message: "cannot apply for own project",
-    });
-  }
-
-  console.log("project : ", project);
+  const { reason, link, email, project, role } = result.data;
   try {
     //check if project exists or not
     const isProjectExists = await Project.findById(project);
-
-    console.log("project", isProjectExists);
 
     if (!isProjectExists) {
       return res.status(401).json({
@@ -42,6 +29,14 @@ const applyToProject = async (req, res) => {
         message: "Project not exists",
       });
     }
+
+    if (userid === isProjectExists.owner.toString()) {
+      return res.status(401).json({
+        success: false,
+        message: "cannot apply for own project",
+      });
+    }
+
     // check if application is already applied or not
     const application = await Application.findOne({
       user: userid,
@@ -59,17 +54,25 @@ const applyToProject = async (req, res) => {
       project: project,
       reason: reason,
       role: role,
-      owner: owner,
+      owner: isProjectExists.owner,
       email: email,
       portfolioLink: link,
       status: "pending",
     });
 
     isProjectExists.application += 1;
-    isProjectExists.save();
+    await isProjectExists.save();
 
     await User.findByIdAndUpdate(userid, {
       $push: { Myapplications: apllication._id },
+    });
+
+    await Notification.create({
+      recipient: isProjectExists.owner,
+      actor: userid,
+      project: isProjectExists._id,
+      application: apllication._id,
+      type: "application_received",
     });
 
     res.status(201).json({
@@ -92,13 +95,6 @@ const getMyApplications = async (req, res) => {
     const application = await Application.find({ user: userid }).populate(
       "project",
     );
-
-    if (application.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "You have not Submited any application for the project",
-      });
-    }
 
     return res.status(200).json({
       success: true,
@@ -155,12 +151,13 @@ const updateApplicationStatus = async (req, res) => {
 
     console.log("request reaches the server : ");
 
-    const status = req.body.status;
+    const status =
+      typeof req.body.status === "string" ? req.body.status.toLowerCase() : "";
 
-    if (!status) {
-      return res.status(401).json({
+    if (status !== "accepted" && status !== "rejected") {
+      return res.status(400).json({
         success: false,
-        message: "status not define",
+        message: "Invalid application status",
       });
     }
 
@@ -184,16 +181,41 @@ const updateApplicationStatus = async (req, res) => {
       });
     }
 
-    application.status = status.toLowerCase();
-    application.save();
+    application.status = status;
+    await application.save();
 
-    await Project.findByIdAndUpdate(application.project, {
-      $push: { team: application.user },
-    });
+    if (status === "accepted") {
+      const updatedProject = await Project.findByIdAndUpdate(
+        application.project._id,
+        {
+          $addToSet: { team: application.user._id },
+          $pull: { rolesNeeded: application.role },
+        },
+      );
 
-    // (userName,projectName,role,ownerName),
+      if (!updatedProject) {
+        return res.status(404).json({
+          success: false,
+          message: "Project not found",
+        });
+      }
 
-    sendMail(application?.email,application?.user?.name,application?.project.title,application.role,application?.owner?.name);
+      await Notification.create({
+        recipient: application.user._id,
+        actor: application.owner._id,
+        project: application.project._id,
+        application: application._id,
+        type: "application_accepted",
+      });
+
+      sendMail(
+        application?.email,
+        application?.user?.name,
+        application?.project.title,
+        application.role,
+        application?.owner?.name,
+      );
+    }
 
     res.status(200).json({
       success: true,

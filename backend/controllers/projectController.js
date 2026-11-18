@@ -147,12 +147,25 @@ const getProjectById = async (req, res) => {
         },
       },
 
-      // Populate project owner
+      // Populate only the public fields needed by the project page.
       {
         $lookup: {
           from: "users",
-          localField: "owner",
-          foreignField: "_id",
+          let: { ownerId: "$owner" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$ownerId"] },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                profile: 1,
+              },
+            },
+          ],
           as: "owner",
         },
       },
@@ -160,6 +173,103 @@ const getProjectById = async (req, res) => {
         $unwind: {
           path: "$owner",
           preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Populate the names and avatars for every project team member.
+      {
+        $lookup: {
+          from: "users",
+          let: { teamIds: { $ifNull: ["$team", []] } },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $in: ["$_id", "$$teamIds"] },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                profile: 1,
+              },
+            },
+          ],
+          as: "team",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "applications",
+          let: {
+            projectId: "$_id",
+            teamIds: "$team._id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$project", "$$projectId"] },
+                    { $eq: ["$status", "accepted"] },
+                    { $in: ["$user", "$$teamIds"] },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                user: 1,
+                role: 1,
+              },
+            },
+          ],
+          as: "teamApplications",
+        },
+      },
+      {
+        $addFields: {
+          team: {
+            $map: {
+              input: "$team",
+              as: "member",
+              in: {
+                $mergeObjects: [
+                  "$$member",
+                  {
+                    role: {
+                      $let: {
+                        vars: {
+                          application: {
+                            $arrayElemAt: [
+                              {
+                                $filter: {
+                                  input: "$teamApplications",
+                                  as: "application",
+                                  cond: {
+                                    $eq: [
+                                      "$$application.user",
+                                      "$$member._id",
+                                    ],
+                                  },
+                                },
+                              },
+                              0,
+                            ],
+                          },
+                        },
+                        in: {
+                          $ifNull: ["$$application.role", null],
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
         },
       },
 
@@ -224,6 +334,7 @@ const getProjectById = async (req, res) => {
       {
         $project: {
           userApplication: 0,
+          teamApplications: 0,
         },
       },
     ]);

@@ -1,21 +1,33 @@
 import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import Card from "../components/user/Card";
-import { userContext } from "../context/UserContext";
-import { useContext } from "react";
 import api from "../../Services/api";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "../components/error/PageState";
+
+interface ExploreProject {
+  _id: string;
+  category: string;
+}
 
 const Explore = () => {
   const filter = ["All", "Web", "Mobile", "AI/ML", "Desgin"];
 
   const [select, setSelect] = useState("All");
   const [input , setInput] = useState("Web");
-  const [searchResult,setSearchResult] = useState([]);
+  const [searchResult,setSearchResult] = useState<ExploreProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
 
 
 
   const filteredProjects = select === "All" ? searchResult : 
-  searchResult.filter((project: any) => project.category === select);
+  searchResult.filter((project) => project.category === select);
 
 
 
@@ -27,7 +39,11 @@ const Explore = () => {
         setSearchResult(response.data.project)
       } catch (error) {
         setSearchResult([]);
-        console.log("error : ");
+        if (!isAxiosError(error) || error.response?.status !== 404) {
+          setError("Unable to search projects. Please try again.");
+        }
+      } finally {
+        setLoading(false);
       }
     },500)
 
@@ -35,8 +51,13 @@ const Explore = () => {
       clearTimeout(timer);
     }
 
-  },[input])
+  },[input, retryCount])
 
+  const handleSearchChange = (value: string) => {
+    setInput(value);
+    setLoading(true);
+    setError(null);
+  };
 
   return (
     <div className="h-full w-full flex py-3 flex-col  pb-20  gap-8">
@@ -48,7 +69,7 @@ const Explore = () => {
 
       <div>
         <input
-        onChange={(e)=> setInput(e.target.value)}
+        onChange={(e)=> handleSearchChange(e.target.value)}
           placeholder="Search projects, stacks, roles"
           type="text"
           className="py-2 w-full border min-h-11 border-[#CFCCC3] rounded-xl px-3 "
@@ -74,18 +95,29 @@ const Explore = () => {
       </div>
 
       <div className="flex items-center flex-col gap-8">
-        {filteredProjects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4">
-            <h2 className="text-lg font-semibold text-[#3D3A44]">
-              {" "}
-              No projects found
-            </h2>
-            <p className="text-sm text-[#5C5964]">
-              Create a project to find teammates
-            </p>
-          </div>
+        {error ? (
+          <ErrorState
+            title="Projects couldn’t be loaded"
+            description={error}
+            onRetry={() => {
+              setLoading(true);
+              setError(null);
+              setRetryCount((count) => count + 1);
+            }}
+          />
+        ) : loading ? (
+          <LoadingState label="Searching projects..." />
+        ) : filteredProjects.length === 0 ? (
+          <EmptyState
+            title={
+              searchResult.length === 0
+                ? "No projects found"
+                : "No projects in this category"
+            }
+            description="Try another search or choose a different category."
+          />
         ) : (
-          filteredProjects.map((project: any) => (
+          filteredProjects.map((project) => (
             <Card key={project._id} project={project} />
           ))
         )}

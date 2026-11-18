@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
 import usersRoutes from "./routes/usersRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import connectDb from "./config/connectDb.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -43,3 +44,5 @@ app.use("/api/projects",projectRoutes);
 app.use("/api/users",usersRoutes);
 
 app.use("/api/application",applicationRoutes);
+
+app.use("/api/notifications", notificationRoutes);

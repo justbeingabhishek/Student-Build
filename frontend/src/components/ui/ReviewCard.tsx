@@ -1,9 +1,8 @@
 import { Link2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import api from "../../../Services/api";
 import { toast } from "sonner";
-
-type ApplicationStatus = "Pending" | "Accepted" | "Rejected";
+import TechStack from "../user/TechStack";
 
 interface ReviewCardProps {
   name: string;
@@ -12,10 +11,10 @@ interface ReviewCardProps {
   avatarColor?: string;
   message: string;
   portfolio: string;
-  skills: string[];
+  skills?: string[];
   status: string;
   id: string;
-  fetchApplcation : any
+  fetchApplcation: () => void;
 }
 
 const ReviewCard = ({
@@ -25,29 +24,24 @@ const ReviewCard = ({
   avatarColor = "#7C3AED",
   message,
   portfolio,
-  skills,
+  skills = [],
   status,
   id,
   fetchApplcation
 }: ReviewCardProps) => {
-  console.log("postfolio : ", portfolio);
-
-
   async function updateStatus(data : string){
     console.log("data  : ",data);
     try {
       const response = await api.put(`/application/status/${id}`,{status : data});
       toast.success(response.data.message);
       fetchApplcation();
-    } catch (error) {
-      console.log("error ");
-      toast.error((error as any).response.data.message);
+    } catch (error: unknown) {
+      const message = isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
+      toast.error(message || "Unable to update application status.");
     }
   }
-
-
-
-
 
   return (
     <div className="w-full rounded-[14px] border border-[#E4E1D9] bg-white p-3.5">
@@ -95,10 +89,20 @@ const ReviewCard = ({
         </div>
       )}
 
-      {/* Skills */}
-      <p className="mt-2.5 text-[13px] text-[#5C5964]">
-        Skills: {skills.join(", ")}
-      </p>
+      <div className="mt-2.5">
+        <p className="mb-1.5 text-[13px] font-semibold text-[#3D3A44]">
+          Skills
+        </p>
+        {skills.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {skills.map((skill, index) => (
+              <TechStack key={`${skill}-${index}`} tech={skill} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-[13px] text-[#5C5964]">No skills listed.</p>
+        )}
+      </div>
 
       {/* Actions - Pending only */}
       {status === "pending" && (

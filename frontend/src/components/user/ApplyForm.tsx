@@ -107,7 +107,6 @@ const ApplyForm = () => {
         </span>
       )}
 
-      <span className="text-[13px] text-[#B42318]">Must not be empty</span>
 
       <button type="submit" className="w-full text-center bg-[#2F4BE0] p-3 text-white rounded-[10px] min-h-11 mt-5">
         {loading ? "Submiting application" : "Submit application"}
