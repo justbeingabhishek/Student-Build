@@ -48,6 +48,7 @@ export const UserContextProvider = ({
   };
 
   const fetchProjects = async () => {
+    if(!user) return;
     setLoading(true);
     setProjectsLoading(true);
     setProjectsError(null);
