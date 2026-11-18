@@ -2,7 +2,9 @@ import { useForm } from "react-hook-form";
 
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 import api from "../../../../Services/api.ts";
+import { useState } from "react";
 
 interface SignupFormValues {
   name: string;
@@ -18,9 +20,10 @@ const Signup = () => {
   } = useForm<SignupFormValues>({});
 
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleSignup = async(data: SignupFormValues) => {
-    console.log("SIGNUP DATA:", data);
+    setLoading(true);
     try{
       const response = await api.post("/auth/signup", data);
       if(response.data.success){
@@ -31,9 +34,14 @@ const Signup = () => {
       console.log("SIGNUP RESPONSE:", response.data);
     }catch(error){
       console.error("SIGNUP ERROR:", error);
+      toast.error(
+        isAxiosError(error)
+          ? error.response?.data?.message || "Unable to create account. Please try again."
+          : "Unable to create account. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    // Add signup API here
   };
 
   return (
@@ -138,9 +146,16 @@ const Signup = () => {
           {/* Signup Button */}
           <button
             type="submit"
-            className="mt-2.5 h-14 w-full rounded-4 bg-[#3048e8] text-base font-bold text-white transition hover:bg-[#263bd0] md:h-16.5 md:text-[20px]"
+            disabled={loading}
+            className="mt-2.5 flex h-14 w-full items-center justify-center gap-2 rounded-4 bg-[#3048e8] text-base font-bold text-white transition hover:bg-[#263bd0] disabled:cursor-not-allowed disabled:opacity-70 md:h-16.5 md:text-[20px]"
           >
-            Create account
+            {loading && (
+              <span
+                aria-hidden="true"
+                className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+              />
+            )}
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 

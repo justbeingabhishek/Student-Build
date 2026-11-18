@@ -47,11 +47,11 @@ const ProfilePicture = ({ user }: { user: ProfileCardUser }) => {
     .join(" · ");
 
   return (
-    <section className="overflow-hidden rounded-[14px] border border-[#E4E1D9] bg-white">
-      <div className="h-14 bg-gradient-to-r from-[#2F4BE0] to-[#8FA2FF]" />
+    <section className="overflow-hidden rounded-2xl border border-[#E4E1D9] bg-white shadow-sm">
+      <div className="h-24 bg-gradient-to-r from-[#2F4BE0] via-[#536BED] to-[#8FA2FF] sm:h-32" />
 
-      <div className="px-3 pb-3">
-        <div className="-mt-8 mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#2F4BE0] text-lg font-bold text-white">
+      <div className="px-4 pb-5 sm:px-6 sm:pb-6">
+        <div className="-mt-11 mb-3 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#2F4BE0] text-2xl font-bold text-white shadow-sm sm:-mt-12 sm:h-24 sm:w-24">
           {user.profile ? (
             <img
               src={user.profile}
@@ -63,25 +63,27 @@ const ProfilePicture = ({ user }: { user: ProfileCardUser }) => {
           )}
         </div>
 
-        <h1 className="text-lg font-semibold leading-6 text-[#16151A]">
+        <h2 className="break-words text-2xl font-bold leading-tight tracking-tight text-[#16151A] sm:text-3xl">
           {user.name || "Your name"}
-        </h1>
+        </h2>
         {subtitle && (
-          <p className="text-xs text-[#5C5964]">{subtitle}</p>
+          <p className="mt-1 text-sm leading-6 text-[#5C5964]">{subtitle}</p>
         )}
         {user.bio && (
-          <p className="mt-1.5 text-sm text-[#16151A]">{user.bio}</p>
+          <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-[#3D3A44] sm:text-base">
+            {user.bio}
+          </p>
         )}
 
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <div className="mt-5 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap">
           {githubUrl && (
             <a
               href={githubUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#E4E1D9] px-2.5 py-1 text-[11px] text-[#2F4BE0] hover:bg-[#F4F5FF]"
+              className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-[#E4E1D9] px-3 text-xs font-medium text-[#2F4BE0] transition hover:bg-[#F4F5FF] sm:text-sm"
             >
-              <Link2 size={12} />
+              <Link2 size={15} className="shrink-0" />
               <span className="truncate">
                 {user.github?.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
               </span>
@@ -93,9 +95,9 @@ const ProfilePicture = ({ user }: { user: ProfileCardUser }) => {
               href={portfolioUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#E4E1D9] px-2.5 py-1 text-[11px] text-[#2F4BE0] hover:bg-[#F4F5FF]"
+              className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-[#E4E1D9] px-3 text-xs font-medium text-[#2F4BE0] transition hover:bg-[#F4F5FF] sm:text-sm"
             >
-              <Globe2 size={12} />
+              <Globe2 size={15} className="shrink-0" />
               <span className="truncate">
                 {user.portfolio?.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
               </span>
@@ -103,7 +105,7 @@ const ProfilePicture = ({ user }: { user: ProfileCardUser }) => {
           ) : (
             <Link
               to="/edit-info"
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-[#DAD7CF] px-2.5 py-1 text-[11px] text-[#5C5964] hover:bg-[#F7F6F2]"
+              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-dashed border-[#DAD7CF] px-3 text-xs font-medium text-[#5C5964] transition hover:bg-[#F7F6F2] sm:text-sm"
             >
               + Add portfolio
             </Link>
@@ -112,9 +114,9 @@ const ProfilePicture = ({ user }: { user: ProfileCardUser }) => {
           {user.email && (
             <a
               href={`mailto:${user.email}`}
-              className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#E4E1D9] px-2.5 py-1 text-[11px] text-[#2F4BE0] hover:bg-[#F4F5FF]"
+              className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-[#E4E1D9] px-3 text-xs font-medium text-[#2F4BE0] transition hover:bg-[#F4F5FF] sm:text-sm"
             >
-              <Mail size={12} />
+              <Mail size={15} className="shrink-0" />
               <span className="truncate">{user.email}</span>
             </a>
           )}

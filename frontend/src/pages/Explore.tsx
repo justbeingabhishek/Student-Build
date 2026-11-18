@@ -17,41 +17,59 @@ const Explore = () => {
   const filter = ["All", "Web", "Mobile", "AI/ML", "Desgin"];
 
   const [select, setSelect] = useState("All");
-  const [input , setInput] = useState("Web");
-  const [searchResult,setSearchResult] = useState<ExploreProject[]>([]);
+  const [input, setInput] = useState("");
+  const [searchResult, setSearchResult] = useState<ExploreProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
+  const filteredProjects =
+    select === "All"
+      ? searchResult
+      : searchResult.filter((project) => project.category === select);
 
-
-
-  const filteredProjects = select === "All" ? searchResult : 
-  searchResult.filter((project) => project.category === select);
-
-
-
-  useEffect(()=>{
-    const timer = setTimeout(async()=>{
-      console.log("request done  : ");
+  useEffect(() => {
+    let active = true;
+    const query = input.trim();
+    const timer = setTimeout(async () => {
       try {
-        const response = await api.get(`/projects/search/project?search=${input}`);
-        setSearchResult(response.data.project)
+        const response = query
+          ? await api.get("/projects/search/project", {
+              params: { search: query },
+            })
+          : await api.get("/projects");
+        const projects = query
+          ? response.data.project
+          : response.data.projects;
+
+        if (!Array.isArray(projects)) {
+          throw new Error("Unexpected projects response");
+        }
+
+        if (active) {
+          setSearchResult(projects);
+          setError(null);
+        }
       } catch (error) {
-        setSearchResult([]);
-        if (!isAxiosError(error) || error.response?.status !== 404) {
-          setError("Unable to search projects. Please try again.");
+        if (active) {
+          if (isAxiosError(error) && error.response?.status === 404 && query) {
+            setSearchResult([]);
+            setError(null);
+          } else {
+            setSearchResult([]);
+            setError("Unable to load projects. Please try again.");
+          }
         }
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
-    },500)
+    }, query ? 350 : 0);
 
-    return ()=>{
+    return () => {
+      active = false;
       clearTimeout(timer);
-    }
-
-  },[input, retryCount])
+    };
+  }, [input, retryCount]);
 
   const handleSearchChange = (value: string) => {
     setInput(value);
@@ -69,7 +87,8 @@ const Explore = () => {
 
       <div>
         <input
-        onChange={(e)=> handleSearchChange(e.target.value)}
+          value={input}
+          onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Search projects, stacks, roles"
           type="text"
           className="py-2 w-full border min-h-11 border-[#CFCCC3] rounded-xl px-3 "
@@ -83,13 +102,14 @@ const Explore = () => {
       >
         {filter.map((item, idx) => {
           return (
-            <span
+            <button
+              type="button"
               key={idx}
               onClick={() => setSelect(item)}
-              className={`border text-[#16151A] border-[#DAD7CF]  px-3 py-1.5 flex items-center justify-center text-[13px] min-h-9 rounded-2xl ${select == item ? "border border-[#16151A] bg-[#16151A] text-[#FFFFFF] " : ""} `}
+              className={`border text-[#16151A] border-[#DAD7CF] px-3 py-1.5 flex items-center justify-center text-[13px] min-h-9 rounded-2xl ${select === item ? "border border-[#16151A] bg-[#16151A] text-[#FFFFFF]" : ""}`}
             >
               {item}
-            </span>
+            </button>
           );
         })}
       </div>

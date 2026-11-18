@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { userContext } from "../../../context/UserContext";
 
 import api from "../../../../Services/api.ts";
@@ -19,10 +20,13 @@ const Login = () => {
   } = useForm<LoginFormData>();
 
   const navigate = useNavigate();
-  const { setUser  } : any = useContext(userContext);
+  const { setUser } = useContext(userContext)!;
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async(data: LoginFormData) => {
+    setError(null);
+    setLoading(true);
     try {
       const response = await api.post(`/auth/login`, data , {
         withCredentials: true,
@@ -34,8 +38,14 @@ const Login = () => {
         navigate("/");
       }
     } catch (error) {
-      setError((error as any).response?.data?.message || "Login failed. Please try again.");
+      setError(
+        isAxiosError<{ message?: string }>(error)
+          ? error.response?.data?.message || "Login failed. Please try again."
+          : "Login failed. Please try again.",
+      );
       console.error("LOGIN ERROR:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,9 +133,16 @@ const Login = () => {
           {/* Login Button */}
           <button
             type="submit"
-            className="mt-2.5 h-14 w-full rounded-4 bg-[#3048e8] text-base font-bold text-white transition hover:bg-[#263bd0] md:h-16.5 md:text-[20px]"
+            disabled={loading}
+            className="mt-2.5 flex h-14 w-full items-center justify-center gap-2 rounded-4 bg-[#3048e8] text-base font-bold text-white transition hover:bg-[#263bd0] disabled:cursor-not-allowed disabled:opacity-70 md:h-16.5 md:text-[20px]"
           >
-            Log in
+            {loading && (
+              <span
+                aria-hidden="true"
+                className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+              />
+            )}
+            {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
 
