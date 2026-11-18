@@ -2,6 +2,8 @@ import z from "zod";
 
 // zod schema for signup validation
 
+console.log("hello");
+
 const signupSchema = z.object({
     name: z.string().min(2).max(100),
     email: z.email({message: "Invalid Email"}),
