@@ -1,14 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
 const Card = ({ project }: any) => {
-  const bg = [
-    "bg-linear-[135deg] from-[#2F4BE0] to-[#8FA2FF]",
-    "bg-linear-[135deg] from-[#0F766E] to-[#6EE7B7]",
-    "bg-linear-[135deg] from-[#C2410C] to-[#FDBA74]",
-    "bg-linear-[135deg] from-[#7C3AED] to-[#C4B5FD]",
-    "bg-linear-[135deg] from-[#1D4ED8] to-[#F9A8D4]",
-  ];
-  const random = Math.floor(Math.random() * 5);
   const navigate = useNavigate();
 
   const gradient = project?.coverImage;
