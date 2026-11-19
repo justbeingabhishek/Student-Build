@@ -15,6 +15,7 @@ const updateProject = z.object({
     tech: z.string().array().optional(),
     roles: z.string().array().optional(),
     teamSize: z.string().optional(),
+    category: z.string().optional(),
 })
 
 export {projectSchema,updateProject}

@@ -393,10 +393,12 @@ const updateOneProject = async (req, res) => {
       });
     }
 
-    const { title, description, tech, roles, teamSize } = result.data;
+    const { tech, roles, ...projectFields } = result.data;
+    if (tech) projectFields.techStack = tech;
+    if (roles) projectFields.rolesNeeded = roles;
     const updatedProject = await Project.findByIdAndUpdate(
       projectId,
-      { $set: result.data },
+      { $set: projectFields },
       { new: true, runValidators: true },
     );
 

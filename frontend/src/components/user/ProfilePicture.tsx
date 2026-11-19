@@ -47,11 +47,9 @@ const ProfilePicture = ({ user }: { user: ProfileCardUser }) => {
     .join(" · ");
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#E4E1D9] bg-white shadow-sm">
-      <div className="h-24 bg-gradient-to-r from-[#2F4BE0] via-[#536BED] to-[#8FA2FF] sm:h-32" />
-
-      <div className="px-4 pb-5 sm:px-6 sm:pb-6">
-        <div className="-mt-11 mb-3 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#2F4BE0] text-2xl font-bold text-white shadow-sm sm:-mt-12 sm:h-24 sm:w-24">
+    <section className="border-b border-[#E4E1D9] pb-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-10">
+        <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#DAD7CF] bg-[#2F4BE0] text-2xl font-bold text-white sm:ml-8 sm:h-32 sm:w-32">
           {user.profile ? (
             <img
               src={user.profile}
@@ -63,63 +61,66 @@ const ProfilePicture = ({ user }: { user: ProfileCardUser }) => {
           )}
         </div>
 
-        <h2 className="break-words text-2xl font-bold leading-tight tracking-tight text-[#16151A] sm:text-3xl">
-          {user.name || "Your name"}
-        </h2>
-        {subtitle && (
-          <p className="mt-1 text-sm leading-6 text-[#5C5964]">{subtitle}</p>
-        )}
-        {user.bio && (
-          <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-[#3D3A44] sm:text-base">
-            {user.bio}
-          </p>
-        )}
-
-        <div className="mt-5 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap">
-          {githubUrl && (
-            <a
-              href={githubUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-[#E4E1D9] px-3 text-xs font-medium text-[#2F4BE0] transition hover:bg-[#F4F5FF] sm:text-sm"
-            >
-              <Link2 size={15} className="shrink-0" />
-              <span className="truncate">
-                {user.github?.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
-              </span>
-            </a>
+        <div className="min-w-0 flex-1">
+          <h1 className="break-words text-2xl font-normal leading-tight text-[#16151A] sm:text-3xl">
+            {user.name || "Your name"}
+          </h1>
+          {subtitle && (
+            <p className="mt-2 text-sm leading-6 text-[#5C5964]">{subtitle}</p>
+          )}
+          {user.bio && (
+            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[#3D3A44]">
+              {user.bio}
+            </p>
           )}
 
-          {portfolioUrl ? (
-            <a
-              href={portfolioUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-[#E4E1D9] px-3 text-xs font-medium text-[#2F4BE0] transition hover:bg-[#F4F5FF] sm:text-sm"
-            >
-              <Globe2 size={15} className="shrink-0" />
-              <span className="truncate">
-                {user.portfolio?.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
-              </span>
-            </a>
-          ) : (
-            <Link
-              to="/edit-info"
-              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-dashed border-[#DAD7CF] px-3 text-xs font-medium text-[#5C5964] transition hover:bg-[#F7F6F2] sm:text-sm"
-            >
-              + Add portfolio
-            </Link>
-          )}
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            {githubUrl && (
+              <a
+                href={githubUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex max-w-full items-center gap-1.5 font-medium text-[#2F4BE0] hover:underline"
+              >
+                <Link2 size={15} className="shrink-0" />
+                <span className="truncate">
+                  {user.github?.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
+                </span>
+              </a>
+            )}
 
-          {user.email && (
-            <a
-              href={`mailto:${user.email}`}
-              className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-[#E4E1D9] px-3 text-xs font-medium text-[#2F4BE0] transition hover:bg-[#F4F5FF] sm:text-sm"
-            >
-              <Mail size={15} className="shrink-0" />
-              <span className="truncate">{user.email}</span>
-            </a>
-          )}
+            {portfolioUrl ? (
+              <a
+                href={portfolioUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex max-w-full items-center gap-1.5 font-medium text-[#2F4BE0] hover:underline"
+              >
+                <Globe2 size={15} className="shrink-0" />
+                <span className="truncate">
+                  {user.portfolio?.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
+                </span>
+              </a>
+            ) : (
+              <Link
+                to="/edit-info"
+                className="inline-flex items-center gap-1.5 text-[#5C5964] hover:text-[#16151A]"
+              >
+                <Globe2 size={15} />
+                Add portfolio
+              </Link>
+            )}
+
+            {user.email && (
+              <a
+                href={`mailto:${user.email}`}
+                className="inline-flex max-w-full items-center gap-1.5 text-[#5C5964] hover:text-[#16151A]"
+              >
+                <Mail size={15} className="shrink-0" />
+                <span className="truncate">{user.email}</span>
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </section>

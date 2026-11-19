@@ -1,18 +1,18 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import {
   ClipboardList,
-  FolderKanban,
   LoaderCircle,
   LogOut,
   Pencil,
+  Plus,
 } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 import api from "../../Services/api";
 import ProfileInfo from "../components/user/ProfileInfo";
 import ProfilePicture from "../components/user/ProfilePicture";
+import ProjectPost from "../components/user/ProjectPost";
 import { userContext } from "../context/UserContext";
 
 interface ProfileUser {
@@ -30,11 +30,51 @@ interface ProfileUser {
   Myapplications?: string[];
 }
 
+interface ProfileProject {
+  _id: string;
+  title: string;
+  description: string;
+  coverImage?: string;
+  category?: string;
+  teamSize?: string;
+  techStack?: string[];
+  rolesNeeded?: string[];
+}
+
 const Profile = () => {
   const context = useContext(userContext);
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [projects, setProjects] = useState<ProfileProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const user = context?.user as ProfileUser | null | undefined;
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchProjects = async () => {
+      setProjectsLoading(true);
+      setProjectsError(null);
+      try {
+        const response = await api.get("/users/me/projects");
+        if (active) setProjects(response.data.projects);
+      } catch (error) {
+        console.error("Unable to load profile projects:", error);
+        if (active) {
+          setProjectsError("Your projects couldn’t be loaded. Please try again.");
+        }
+      } finally {
+        if (active) setProjectsLoading(false);
+      }
+    };
+
+    void fetchProjects();
+    return () => {
+      active = false;
+    };
+  }, [retryCount]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -59,82 +99,126 @@ const Profile = () => {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 pb-24 md:gap-6">
-      <header className="px-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#77747C]">
-          Your account
-        </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#16151A] sm:text-3xl">
-          Profile
-        </h1>
-      </header>
-
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 pb-24 md:gap-8">
       <ProfilePicture user={user} />
 
-      <div className="grid w-full grid-cols-2 gap-3 sm:gap-4">
-        <ProfileInfo type="Projects" count={user.MyProjects?.length ?? 0} />
-        <ProfileInfo
-          type="Applications"
-          count={user.Myapplications?.length ?? 0}
-        />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-x-7 gap-y-3">
+          <ProfileInfo type="projects" count={projects.length} />
+          <ProfileInfo
+            type="applications"
+            count={user.Myapplications?.length ?? 0}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/edit-info")}
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#DAD7CF] bg-white px-4 text-sm font-semibold text-[#16151A] transition hover:bg-[#F7F6F2]"
+        >
+          <Pencil size={15} />
+          Edit profile
+        </button>
       </div>
 
-      <section className="rounded-2xl border border-[#E4E1D9] bg-white p-4 sm:p-5">
-        <h2 className="text-lg font-semibold text-[#16151A]">Skills</h2>
-        <p className="mt-1 text-sm text-[#77747C]">
-          Technologies and tools you work with
-        </p>
-        {user.skills?.length ? (
-          <div className="mt-4 flex flex-wrap gap-2">
+      {user.skills?.length ? (
+        <section>
+          <h2 className="text-sm font-semibold text-[#16151A]">Skills</h2>
+          <div className="mt-2 flex flex-wrap gap-2">
             {user.skills.map((skill) => (
               <span
                 key={skill}
-                className="inline-flex min-h-9 items-center rounded-full border border-[#DAD7CF] bg-[#F7F6F2] px-3 text-sm font-medium text-[#3D3A44]"
+                className="inline-flex min-h-8 items-center rounded-full border border-[#DAD7CF] bg-white px-3 text-xs font-medium text-[#3D3A44]"
               >
                 {skill}
               </span>
             ))}
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-[#6B6872]">
-            Add skills to your profile.
+        </section>
+      ) : null}
+
+      <section aria-labelledby="projects-heading">
+        <div className="mb-4 flex items-center justify-between border-t border-[#E4E1D9] pt-4">
+          <h2
+            id="projects-heading"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3D3A44]"
+          >
+            Projects
+          </h2>
+          <button
+            type="button"
+            onClick={() => navigate("/my-applications")}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-[#5C5964] transition hover:bg-white"
+          >
+            <ClipboardList size={15} />
+            My applications
+          </button>
+        </div>
+
+        {projectsLoading ? (
+          <p className="py-12 text-center text-sm text-[#6B6872]">
+            Loading your projects…
           </p>
+        ) : projectsError ? (
+          <div className="rounded-2xl border border-[#E4E1D9] bg-white px-4 py-10 text-center">
+            <p className="text-sm text-[#5C5964]">{projectsError}</p>
+            <button
+              type="button"
+              onClick={() => setRetryCount((count) => count + 1)}
+              className="mt-3 text-sm font-semibold text-[#2F4BE0] hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : projects.length ? (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
+            {projects.map((project) => (
+              <ProjectPost
+                key={project._id}
+                project={project}
+                onUpdated={(updatedProject) =>
+                  setProjects((current) =>
+                    current.map((item) =>
+                      item._id === updatedProject._id ? updatedProject : item,
+                    ),
+                  )
+                }
+                onDeleted={(projectId) => {
+                  setProjects((current) =>
+                    current.filter((item) => item._id !== projectId),
+                  );
+                  void context?.fetchProjects();
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center rounded-2xl border border-dashed border-[#DAD7CF] bg-white/70 px-4 py-12 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#16151A] text-[#16151A]">
+              <Plus size={27} strokeWidth={1.7} />
+            </span>
+            <h3 className="mt-4 text-lg font-semibold text-[#16151A]">
+              Share your first project
+            </h3>
+            <p className="mt-1 max-w-sm text-sm text-[#6B6872]">
+              Projects you create will show up here as posts.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/post")}
+              className="mt-4 min-h-10 rounded-lg bg-[#2F4BE0] px-4 text-sm font-semibold text-white transition hover:bg-[#263FC5]"
+            >
+              Create project
+            </button>
+          </div>
         )}
       </section>
 
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => navigate("/edit-info")}
-          className="col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#2F4BE0] px-4 text-sm font-semibold text-white transition hover:bg-[#263FC5]"
-        >
-          <Pencil size={17} />
-          Edit profile
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate("/my-projects")}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#E4E1D9] bg-white px-3 text-sm font-semibold text-[#16151A] transition hover:bg-[#F7F6F2]"
-        >
-          <FolderKanban size={17} />
-          My Projects
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate("/my-applications")}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#E4E1D9] bg-white px-3 text-sm font-semibold text-[#16151A] transition hover:bg-[#F7F6F2]"
-        >
-          <ClipboardList size={17} />
-          My Applications
-        </button>
-
+      <div className="flex flex-wrap gap-3 border-t border-[#E4E1D9] pt-4">
         <button
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
-          className="col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#F0C4BF] bg-white px-4 text-sm font-semibold text-[#B42318] transition hover:bg-[#FFF7F6] disabled:cursor-not-allowed disabled:opacity-70"
+          className="ml-auto flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-[#B42318] transition hover:bg-[#FFF7F6] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {loggingOut ? (
             <LoaderCircle size={17} className="animate-spin" />
