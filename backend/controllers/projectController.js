@@ -122,7 +122,6 @@ const getProjects = async (req, res) => {
 
 // getting project by id route
 
-
 const getProjectById = async (req, res) => {
   const projectId = req.params.id;
   const userId = req.userid;
@@ -252,10 +251,7 @@ const getProjectById = async (req, res) => {
                                   input: "$teamApplications",
                                   as: "application",
                                   cond: {
-                                    $eq: [
-                                      "$$application.user",
-                                      "$$member._id",
-                                    ],
+                                    $eq: ["$$application.user", "$$member._id"],
                                   },
                                 },
                               },
@@ -318,17 +314,11 @@ const getProjectById = async (req, res) => {
           },
 
           applicationStatus: {
-            $ifNull: [
-              { $arrayElemAt: ["$userApplication.status", 0] },
-              null,
-            ],
+            $ifNull: [{ $arrayElemAt: ["$userApplication.status", 0] }, null],
           },
 
           role: {
-            $ifNull: [
-              { $arrayElemAt: ["$userApplication.role", 0] },
-              null,
-            ],
+            $ifNull: [{ $arrayElemAt: ["$userApplication.role", 0] }, null],
           },
         },
       },
@@ -352,7 +342,6 @@ const getProjectById = async (req, res) => {
       message: "Project found",
       project: project[0],
     });
-
   } catch (error) {
     console.error("Get project by ID error:", error);
 
@@ -361,8 +350,6 @@ const getProjectById = async (req, res) => {
     });
   }
 };
-
-
 
 //update existing project
 const updateOneProject = async (req, res) => {
@@ -448,7 +435,6 @@ const deleteProject = async (req, res) => {
   }
 };
 
-
 const searchProject = async (req, res) => {
   try {
     const query = req.query.search?.trim();
@@ -459,7 +445,6 @@ const searchProject = async (req, res) => {
         message: "Search query is required",
       });
     }
-
 
     const project = await Project.find({
       $or: [
@@ -483,7 +468,6 @@ const searchProject = async (req, res) => {
       count: project.length,
       project,
     });
-
   } catch (err) {
     console.log("Search controller error:", err);
 
@@ -494,7 +478,102 @@ const searchProject = async (req, res) => {
   }
 };
 
+const saveProject = async (req, res) => {
+  try {
+    const userId = req.userid;
+    const projectId = req.params.id;
 
+    const projectExists = await Project.findById(projectId);
+    if (!projectExists) {
+      return res.status(404).json({
+        message: "project not found",
+        success: false,
+      });
+    } else {
+      //check if the project is already saved by the user
+      const user = await User.findById(userId);
+      if (user.savedProject.includes(projectId)) {
+        return res.status(409).json({
+          message: "Project already saved",
+          success: false,
+        });
+      }
+      // add project to saved projects
+      const updateUser = await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { SavedProject: projectId } },
+        { new: true },
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          message: "User not found",
+          success: false,
+        });
+      }
+      return res.status(201).json({
+        message: "project saved successfully",
+        success: true,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error, Could not save project",
+      error: error.message,
+    });
+  }
+};
+
+const getSavedProjects = async (req, res) => {
+  try {
+    const userId = req.userid;
+    const SavedProjects = await User.findById(userId).populate("savedProject");
+    if (!SavedProjects) {
+      return res.status(404).json({
+        message: "No saved projects found",
+      });
+    }
+    return res.status(200).json({
+      message: "Saved projects fetched successfully",
+      savedProjects: SavedProjects,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error, Could not fetch saved projects",
+      error: error.message,
+    });
+  }
+};
+
+const unsaveProject = async (req, res) => {
+  try {
+    const userId = req.userid;
+    const projectId = req.params.projectId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    } else {
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { SavedProject: projectId } },
+        { new: true },
+      );
+      return res.status(200).json({
+        message: "Project removed from saved projects",
+        success: true,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error, Could not unsave project",
+      error: error.message,
+    });
+  }
+};
 export {
   projects,
   getProjects,
@@ -502,4 +581,7 @@ export {
   updateOneProject,
   deleteProject,
   searchProject,
+  saveProject,
+  getSavedProjects,
+  unsaveProject,
 };
