@@ -1,3 +1,5 @@
+import {useNavigate} from "react-router-dom";
+
 interface TeamMember {
   _id: string;
   name?: string;
@@ -12,6 +14,7 @@ const TeamMates = ({
   data: TeamMember;
   ownerId?: string;
 }) => {
+  const navigate = useNavigate();
   const initials =
     data.name
       ?.trim()
@@ -24,9 +27,10 @@ const TeamMates = ({
 
   return (
     <article className="flex min-w-0 items-center gap-3 rounded-xl border border-[#EAE8E2] bg-[#FCFCFB] p-3 transition-colors hover:border-[#DAD7CF]">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-[#2F4BE0] text-sm font-bold uppercase text-white shadow-sm">
+      <div  onClick ={()=> navigate(`/user/${data._id}`)}
+      className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-[#2F4BE0] text-sm font-bold uppercase text-white shadow-sm">
         {data.profile ? (
-          <img
+          <img 
             src={data.profile}
             alt=""
             className="h-full w-full object-cover"
