@@ -16,6 +16,7 @@ import ProjectPost from "../components/user/ProjectPost";
 import { userContext } from "../context/UserContext";
 
 interface ProfileUser {
+  id?: string;
   _id?: string;
   name?: string;
   email?: string;
@@ -26,7 +27,7 @@ interface ProfileUser {
   skills?: string[];
   github?: string;
   portfolio?: string;
-  MyProjects?: string[];
+  MyProjects?: Array<string | { _id?: string }>;
   Myapplications?: string[];
 }
 
@@ -42,8 +43,12 @@ interface ProfileProject {
   rolesNeeded?: string[];
 }
 
+const getReferenceId = (reference?: string | { _id?: string }) =>
+  typeof reference === "string" ? reference : reference?._id;
+
 const Profile = () => {
   const context = useContext(userContext);
+  const setContextUser = context?.setUser;
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
   const [projects, setProjects] = useState<ProfileProject[]>([]);
@@ -51,6 +56,7 @@ const Profile = () => {
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const user = context?.user as ProfileUser | null | undefined;
+  const userId = user?._id || user?.id;
 
   useEffect(() => {
     let active = true;
@@ -59,8 +65,14 @@ const Profile = () => {
       setProjectsLoading(true);
       setProjectsError(null);
       try {
-        const response = await api.get("/users/me/projects");
-        if (active) setProjects(response.data.projects);
+        const [profileResponse, projectsResponse] = await Promise.all([
+          api.get("/users/me"),
+          api.get("/users/me/projects"),
+        ]);
+        if (active) {
+          setContextUser?.(profileResponse.data.user);
+          setProjects(projectsResponse.data.projects);
+        }
       } catch (error) {
         console.error("Unable to load profile projects:", error);
         if (active) {
@@ -75,7 +87,7 @@ const Profile = () => {
     return () => {
       active = false;
     };
-  }, [retryCount]);
+  }, [retryCount, setContextUser]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -177,10 +189,15 @@ const Profile = () => {
                 key={project._id}
                 project={project}
                 canManage={
-                  Boolean(user._id) &&
-                  (typeof project.owner === "string"
-                    ? project.owner
-                    : project.owner?._id) === user._id
+                  Boolean(userId) &&
+                  (getReferenceId(project.owner)
+                    ? getReferenceId(project.owner) === userId
+                    : Boolean(
+                        user.MyProjects?.some(
+                          (reference) =>
+                            getReferenceId(reference) === project._id,
+                        ),
+                      ))
                 }
                 onUpdated={(updatedProject) =>
                   setProjects((current) =>

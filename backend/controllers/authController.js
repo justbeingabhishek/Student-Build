@@ -5,6 +5,7 @@ import {
   signupSchema,
   loginSchema,
   forgotPasswordSchema,
+  verifyResetPasswordOtpSchema,
   resetPasswordSchema,
 } from "../validations/authValidation.js";
 import User from "../models/User.Model.js";
@@ -183,20 +184,15 @@ const forgotPassword = async (req, res) => {
   return res.status(202).json(genericResponse);
 };
 
-const resetPassword = async (req, res) => {
-  const result = resetPasswordSchema.safeParse(req.body);
-  if (!result.success) {
-    return res.status(400).json({ message: "Invalid password reset details." });
-  }
+const invalidResetOtpResponse = {
+  success: false,
+  message: "The verification code is invalid or expired. Request a new code.",
+};
 
-  const { email, otp, newPassword } = result.data;
+const getUserWithValidResetOtp = async (email, otp) => {
   const user = await User.findOne({ email }).select(
     "+passwordResetOtpHash +passwordResetOtpExpiresAt +passwordResetOtpAttempts",
   );
-  const invalidCodeResponse = {
-    success: false,
-    message: "The verification code is invalid or expired. Request a new code.",
-  };
   const now = new Date();
 
   if (
@@ -205,14 +201,14 @@ const resetPassword = async (req, res) => {
     !user.passwordResetOtpExpiresAt ||
     user.passwordResetOtpExpiresAt <= now
   ) {
-    return res.status(400).json(invalidCodeResponse);
+    return null;
   }
 
   const attempts = user.passwordResetOtpAttempts ?? 0;
   if (attempts >= maxResetOtpAttempts) {
     clearResetOtp(user);
     await user.save();
-    return res.status(400).json(invalidCodeResponse);
+    return null;
   }
 
   const submittedHash = Buffer.from(hashResetOtp(otp), "hex");
@@ -233,17 +229,65 @@ const resetPassword = async (req, res) => {
     } else {
       update.$inc = { passwordResetOtpAttempts: 1 };
     }
+
+    const attemptFilter =
+      attempts === 0
+        ? {
+            $or: [
+              { passwordResetOtpAttempts: 0 },
+              { passwordResetOtpAttempts: { $exists: false } },
+            ],
+          }
+        : { passwordResetOtpAttempts: attempts };
+
     await User.updateOne(
       {
         _id: user._id,
         passwordResetOtpHash: user.passwordResetOtpHash,
-        passwordResetOtpAttempts: attempts,
+        ...attemptFilter,
       },
       update,
     );
-    return res.status(400).json(invalidCodeResponse);
+    return null;
   }
 
+  return user;
+};
+
+const verifyPasswordResetOtp = async (req, res) => {
+  const result = verifyResetPasswordOtpSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      message: "Enter a valid email address and 6-digit code.",
+    });
+  }
+
+  const { email, otp } = result.data;
+  const user = await getUserWithValidResetOtp(email, otp);
+  if (!user) {
+    return res.status(400).json(invalidResetOtpResponse);
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Verification code is valid.",
+  });
+};
+
+const resetPassword = async (req, res) => {
+  const result = resetPasswordSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ message: "Invalid password reset details." });
+  }
+
+  const { email, otp, newPassword } = result.data;
+  const user = await getUserWithValidResetOtp(email, otp);
+  if (!user) {
+    return res.status(400).json(invalidResetOtpResponse);
+  }
+
+  const now = new Date();
   const hashedPassword = await bcrypt.hash(newPassword, 10);
   const updateResult = await User.updateOne(
     {
@@ -264,7 +308,7 @@ const resetPassword = async (req, res) => {
   );
 
   if (updateResult.matchedCount !== 1) {
-    return res.status(400).json(invalidCodeResponse);
+    return res.status(400).json(invalidResetOtpResponse);
   }
 
   return res.status(200).json({
@@ -287,4 +331,11 @@ const logout = (req, res) => {
   });
 };
 
-export { signup, login, logout, forgotPassword, resetPassword };
+export {
+  signup,
+  login,
+  logout,
+  forgotPassword,
+  verifyPasswordResetOtp,
+  resetPassword,
+};
