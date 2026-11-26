@@ -41,14 +41,23 @@ export default function ForgotPassword() {
     }
   };
 
-  const continueWithOtp = (event: FormEvent<HTMLFormElement>) => {
+  const continueWithOtp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     if (otp.length !== 6) {
       setError("Enter the 6-digit OTP.");
       return;
     }
-    setStep("password");
+
+    setBusy(true);
+    try {
+      await api.post("/auth/verify-reset-otp", { email, otp });
+      setStep("password");
+    } catch (requestError: unknown) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const resetPassword = async (event: FormEvent<HTMLFormElement>) => {
@@ -204,9 +213,18 @@ export default function ForgotPassword() {
                     className={`${inputClass} text-center text-xl font-semibold tracking-[0.35em]`}
                   />
                 </label>
-                <button type="submit" className={buttonClass}>
-                  Continue
-                  <ArrowRight size={16} />
+                <button type="submit" disabled={busy} className={buttonClass}>
+                  {busy ? (
+                    <>
+                      <LoaderCircle size={17} className="animate-spin" />
+                      Verifying OTP…
+                    </>
+                  ) : (
+                    <>
+                      Verify OTP
+                      <ArrowRight size={16} />
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"

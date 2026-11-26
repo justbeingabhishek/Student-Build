@@ -20,6 +20,11 @@ const forgotPasswordSchema = z.object({
     email: z.email({ message: "Invalid Email" }),
 });
 
+const verifyResetPasswordOtpSchema = z.object({
+    email: z.email({ message: "Invalid Email" }),
+    otp: z.string().regex(/^\d{6}$/, { message: "Invalid verification code" }),
+});
+
 const resetPasswordSchema = z.object({
     email: z.email({ message: "Invalid Email" }),
     otp: z.string().regex(/^\d{6}$/, { message: "Invalid verification code" }),
@@ -28,4 +33,10 @@ const resetPasswordSchema = z.object({
     }),
 });
 
-export { signupSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema };
+export {
+    signupSchema,
+    loginSchema,
+    forgotPasswordSchema,
+    verifyResetPasswordOtpSchema,
+    resetPasswordSchema,
+};
