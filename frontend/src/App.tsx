@@ -14,6 +14,7 @@ import EditInfo from "./pages/EditInfo";
 import Login from "./components/auth/login/Login";
 import Signup from "./components/auth/register/Register";
 import UserProtectedRoute from "./protectedRoutes/UserProtectedRoute";
+import UserProfile from "./pages/UserProfile";
 import { useContext } from "react";
 import { userContext } from "./context/UserContext";
 import { EmptyState } from "./components/error/PageState";
@@ -45,6 +46,7 @@ const App = () => {
           <Route path="apply/:id" element={<Apply />} />
           <Route path="review-applications/:id" element={<ReviewApplications />} />
           <Route path="edit/info" element={<EditInfo/>}/>
+          <Route path="user/:id" element={<UserProfile/>}/>
 
           <Route
             path="*"
