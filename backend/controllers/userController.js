@@ -106,7 +106,7 @@ const getUserProject = async(req,res)=>{
         const projects = await Project.find({
             $or: [{ owner: userId }, { team: userId }],
         })
-            .select("title description techStack")
+            .select("title description techStack owner teamSize rolesNeeded category coverImage")
             .sort({ createdAt: -1 });
 
 

@@ -19,6 +19,7 @@ interface ProfileProject {
 
 interface ProjectPostProps {
   project: ProfileProject;
+  canManage: boolean;
   onUpdated: (project: ProfileProject) => void;
   onDeleted: (projectId: string) => void;
 }
@@ -31,7 +32,12 @@ interface ProjectForm {
   teamSize: string;
 }
 
-const ProjectPost = ({ project, onUpdated, onDeleted }: ProjectPostProps) => {
+const ProjectPost = ({
+  project,
+  canManage,
+  onUpdated,
+  onDeleted,
+}: ProjectPostProps) => {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dialog, setDialog] = useState<"edit" | "delete" | null>(null);
@@ -137,58 +143,63 @@ const ProjectPost = ({ project, onUpdated, onDeleted }: ProjectPostProps) => {
           </span>
         </button>
 
-        <div className="absolute right-2 top-2 z-10" onClick={stopPropagation}>
-          <button
-            type="button"
-            aria-label={`Project options for ${project.title}`}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/55 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+        {canManage && (
+          <div
+            className="absolute right-2 top-2 z-10"
+            onClick={stopPropagation}
           >
-            <MoreHorizontal size={20} />
-          </button>
-
-          {menuOpen && (
-            <div
-              role="menu"
-              aria-label={`${project.title} options`}
-              className="absolute right-0 top-11 w-40 overflow-hidden rounded-xl border border-[#E4E1D9] bg-white py-1 shadow-xl"
+            <button
+              type="button"
+              aria-label={`Project options for ${project.title}`}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/55 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
             >
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setForm({
-                    title: project.title,
-                    description: project.description,
-                    tech: project.techStack?.join(", ") ?? "",
-                    roles: project.rolesNeeded?.join(", ") ?? "",
-                    teamSize: project.teamSize ?? "",
-                  });
-                  setDialog("edit");
-                }}
-                className="flex min-h-10 w-full items-center gap-2.5 px-3 text-left text-sm text-[#16151A] transition hover:bg-[#F7F6F2]"
+              <MoreHorizontal size={20} />
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                aria-label={`${project.title} options`}
+                className="absolute right-0 top-11 w-40 overflow-hidden rounded-xl border border-[#E4E1D9] bg-white py-1 shadow-xl"
               >
-                <Pencil size={15} />
-                Edit project
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setDialog("delete");
-                }}
-                className="flex min-h-10 w-full items-center gap-2.5 px-3 text-left text-sm font-medium text-[#B42318] transition hover:bg-[#FFF7F6]"
-              >
-                <Trash2 size={15} />
-                Delete project
-              </button>
-            </div>
-          )}
-        </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setForm({
+                      title: project.title,
+                      description: project.description,
+                      tech: project.techStack?.join(", ") ?? "",
+                      roles: project.rolesNeeded?.join(", ") ?? "",
+                      teamSize: project.teamSize ?? "",
+                    });
+                    setDialog("edit");
+                  }}
+                  className="flex min-h-10 w-full items-center gap-2.5 px-3 text-left text-sm text-[#16151A] transition hover:bg-[#F7F6F2]"
+                >
+                  <Pencil size={15} />
+                  Edit project
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setDialog("delete");
+                  }}
+                  className="flex min-h-10 w-full items-center gap-2.5 px-3 text-left text-sm font-medium text-[#B42318] transition hover:bg-[#FFF7F6]"
+                >
+                  <Trash2 size={15} />
+                  Delete project
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </article>
 
       {dialog && (
