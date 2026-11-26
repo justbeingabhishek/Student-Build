@@ -365,9 +365,7 @@ const updateOneProject = async (req, res) => {
       });
     }
 
-    const ownerId = project.owner;
-
-    if (!ownerId.equals(userid)) {
+    if (String(project.owner) !== String(userid)) {
       return res.status(403).json({
         message: "Access denied. You are not the owner",
       });
@@ -412,8 +410,7 @@ const deleteProject = async (req, res) => {
         message: "Project does not exists",
       });
     } else {
-      const ownerId = project.owner;
-      if (!ownerId.equals(req.userid)) {
+      if (String(project.owner) !== String(user)) {
         return res.status(403).json({
           message: "You do not have the permission to delete this",
         });

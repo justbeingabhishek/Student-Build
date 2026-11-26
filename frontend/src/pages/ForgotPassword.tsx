@@ -1,22 +1,20 @@
 import { useState, type FormEvent } from "react";
 import { isAxiosError } from "axios";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  KeyRound,
-  LoaderCircle,
-  LockKeyhole,
-  Mail,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "../../Services/api";
 
-type Step = "email" | "verify" | "complete";
+type Step = "email" | "otp" | "password" | "complete";
 
 const getErrorMessage = (error: unknown) =>
   isAxiosError<{ message?: string }>(error)
     ? error.response?.data?.message || "Something went wrong. Please try again."
     : "Something went wrong. Please try again.";
+
+const inputClass =
+  "h-12 w-full rounded-xl border-0 bg-white px-4 text-sm text-[#16151A] shadow-sm outline-none transition placeholder:text-[#92909A] focus:ring-2 focus:ring-[#3048E8]/30";
+const buttonClass =
+  "flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#3048E8] px-4 text-sm font-semibold text-white transition hover:bg-[#263FC5] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3048E8]";
 
 export default function ForgotPassword() {
   const [step, setStep] = useState<Step>("email");
@@ -32,8 +30,10 @@ export default function ForgotPassword() {
     setBusy(true);
     setError(null);
     try {
-      await api.post("/auth/forgot-password", { email });
-      setStep("verify");
+      const normalizedEmail = email.trim();
+      await api.post("/auth/forgot-password", { email: normalizedEmail });
+      setEmail(normalizedEmail);
+      setStep("otp");
     } catch (requestError: unknown) {
       setError(getErrorMessage(requestError));
     } finally {
@@ -41,16 +41,22 @@ export default function ForgotPassword() {
     }
   };
 
+  const continueWithOtp = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    if (otp.length !== 6) {
+      setError("Enter the 6-digit OTP.");
+      return;
+    }
+    setStep("password");
+  };
+
   const resetPassword = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
-    if (otp.length !== 6) {
-      setError("Enter the 6-digit code from your email.");
-      return;
-    }
     if (password.length < 8) {
-      setError("Your new password must be at least 8 characters.");
+      setError("Use at least 8 characters for your password.");
       return;
     }
     if (password !== confirmPassword) {
@@ -67,103 +73,123 @@ export default function ForgotPassword() {
       });
       setStep("complete");
     } catch (requestError: unknown) {
-      setError(getErrorMessage(requestError));
+      const message = getErrorMessage(requestError);
+      setError(message);
+      if (
+        isAxiosError<{ message?: string }>(requestError) &&
+        requestError.response?.data?.message
+          ?.toLowerCase()
+          .includes("verification code")
+      ) {
+        setStep("otp");
+      }
     } finally {
       setBusy(false);
     }
   };
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F2] px-4 py-8">
-      <section className="w-full max-w-md rounded-3xl border border-[#E4E1D9] bg-white p-6 shadow-[0_12px_40px_rgba(22,21,26,0.06)] sm:p-8">
-        <Link
-          to="/login"
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-[#5C5964] transition hover:bg-[#F7F6F2] hover:text-[#16151A]"
-        >
-          <ArrowLeft size={16} />
-          Back to login
-        </Link>
+  const stepIndex =
+    step === "email" ? 0 : step === "otp" ? 1 : step === "password" ? 2 : 2;
 
-        <div className="mt-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEF1FF] text-[#3048E8]">
-          {step === "complete" ? (
-            <CheckCircle2 size={23} />
-          ) : step === "verify" ? (
-            <KeyRound size={23} />
-          ) : (
-            <LockKeyhole size={23} />
-          )}
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#F7F6F3] px-4 py-10 sm:px-6">
+      <div className="w-full max-w-[420px]">
+        <div className="mb-8 flex gap-2" aria-label={`Step ${stepIndex + 1} of 3`}>
+          {[0, 1, 2].map((index) => (
+            <span
+              key={index}
+              className={`h-1 flex-1 rounded-full ${
+                index <= stepIndex ? "bg-[#3048E8]" : "bg-[#E3E0D9]"
+              }`}
+            />
+          ))}
         </div>
 
         {step === "complete" ? (
-          <>
-            <h1 className="mt-5 text-2xl font-bold tracking-tight text-[#16151A]">
+          <section className="text-center">
+            <CheckCircle2
+              size={36}
+              aria-hidden="true"
+              className="mx-auto mb-4 text-[#3048E8]"
+            />
+            <h1 className="text-2xl font-bold tracking-tight text-[#16151A]">
               Password updated
             </h1>
-            <p className="mt-2 text-sm leading-6 text-[#6B6872]">
-              Your password has been changed. You can now sign in with your new
-              password.
+            <p className="mt-2 text-sm text-[#6B6872]">
+              You can now sign in with your new password.
             </p>
-            <Link
-              to="/login"
-              className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-[#3048E8] px-4 text-sm font-semibold text-white transition hover:bg-[#263FC5]"
-            >
-              Return to login
+            <Link to="/login" className={`${buttonClass} mt-6`}>
+              Sign in
+              <ArrowRight size={16} />
             </Link>
-          </>
+          </section>
         ) : (
-          <>
-            <h1 className="mt-5 text-2xl font-bold tracking-tight text-[#16151A]">
-              {step === "verify" ? "Check your email" : "Forgot your password?"}
+          <section>
+            <h1 className="text-2xl font-bold tracking-tight text-[#16151A] sm:text-[28px]">
+              {step === "email"
+                ? "Forgot password?"
+                : step === "otp"
+                  ? "Enter your OTP"
+                  : "Set a new password"}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-[#6B6872]">
-              {step === "verify"
-                ? `If an account exists for ${email}, a 6-digit code has been sent. Enter it below to set a new password.`
-                : "Enter the email address linked to your account. We’ll send you a one-time verification code."}
-            </p>
+            {step === "otp" && (
+              <p className="mt-2 text-sm text-[#6B6872]">
+                OTP sent to this email: <span className="font-medium">{email}</span>
+              </p>
+            )}
 
-            {step === "email" ? (
+            {error && (
+              <p
+                role="alert"
+                className="mt-5 rounded-xl bg-[#FFF1EF] px-3.5 py-3 text-sm text-[#9F2D23]"
+              >
+                {error}
+              </p>
+            )}
+
+            {step === "email" && (
               <form className="mt-6 space-y-4" onSubmit={requestCode}>
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-semibold text-[#25232A]">
+                <label className="block" htmlFor="recovery-email">
+                  <span className="mb-2 block text-sm font-medium text-[#25232A]">
                     Email address
                   </span>
-                  <span className="relative block">
-                    <Mail
-                      size={17}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#77747C]"
-                    />
-                    <input
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      placeholder="you@example.com"
-                      className="min-h-12 w-full rounded-xl border border-[#DAD7CF] bg-white pl-10 pr-3.5 text-sm text-[#16151A] outline-none transition placeholder:text-[#A19EA5] focus:border-[#3048E8] focus:ring-2 focus:ring-[#3048E8]/10"
-                    />
-                  </span>
+                  <input
+                    id="recovery-email"
+                    type="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className={inputClass}
+                  />
                 </label>
-                {error && (
-                  <p role="alert" className="text-sm text-[#B42318]">
-                    {error}
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#3048E8] px-4 text-sm font-semibold text-white transition hover:bg-[#263FC5] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {busy && <LoaderCircle size={17} className="animate-spin" />}
-                  {busy ? "Sending code..." : "Send verification code"}
+                <button type="submit" disabled={busy} className={buttonClass}>
+                  {busy ? (
+                    <>
+                      <LoaderCircle size={17} className="animate-spin" />
+                      Sending OTP…
+                    </>
+                  ) : (
+                    <>
+                      Send OTP
+                      <ArrowRight size={16} />
+                    </>
+                  )}
                 </button>
               </form>
-            ) : (
-              <form className="mt-6 space-y-4" onSubmit={resetPassword}>
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-semibold text-[#25232A]">
-                    6-digit verification code
+            )}
+
+            {step === "otp" && (
+              <form className="mt-6 space-y-4" onSubmit={continueWithOtp}>
+                <label className="block" htmlFor="recovery-otp">
+                  <span className="mb-2 block text-sm font-medium text-[#25232A]">
+                    6-digit OTP
                   </span>
                   <input
+                    id="recovery-otp"
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
@@ -175,14 +201,35 @@ export default function ForgotPassword() {
                       setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
                     }
                     placeholder="000000"
-                    className="min-h-12 w-full rounded-xl border border-[#DAD7CF] bg-white px-3.5 text-center text-lg font-semibold tracking-[0.3em] text-[#16151A] outline-none transition placeholder:text-[#C7C4CC] focus:border-[#3048E8] focus:ring-2 focus:ring-[#3048E8]/10"
+                    className={`${inputClass} text-center text-xl font-semibold tracking-[0.35em]`}
                   />
                 </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-semibold text-[#25232A]">
+                <button type="submit" className={buttonClass}>
+                  Continue
+                  <ArrowRight size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setOtp("");
+                    setStep("email");
+                  }}
+                  className="w-full py-2 text-sm font-medium text-[#5C5964] hover:text-[#3048E8]"
+                >
+                  Change email
+                </button>
+              </form>
+            )}
+
+            {step === "password" && (
+              <form className="mt-6 space-y-4" onSubmit={resetPassword}>
+                <label className="block" htmlFor="new-password">
+                  <span className="mb-2 block text-sm font-medium text-[#25232A]">
                     New password
                   </span>
                   <input
+                    id="new-password"
                     type="password"
                     autoComplete="new-password"
                     minLength={8}
@@ -190,55 +237,65 @@ export default function ForgotPassword() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="At least 8 characters"
-                    className="min-h-12 w-full rounded-xl border border-[#DAD7CF] bg-white px-3.5 text-sm text-[#16151A] outline-none transition placeholder:text-[#A19EA5] focus:border-[#3048E8] focus:ring-2 focus:ring-[#3048E8]/10"
+                    className={inputClass}
                   />
                 </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-semibold text-[#25232A]">
+                <label className="block" htmlFor="confirm-password">
+                  <span className="mb-2 block text-sm font-medium text-[#25232A]">
                     Confirm new password
                   </span>
                   <input
+                    id="confirm-password"
                     type="password"
                     autoComplete="new-password"
                     minLength={8}
                     required
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
-                    placeholder="Enter your new password again"
-                    className="min-h-12 w-full rounded-xl border border-[#DAD7CF] bg-white px-3.5 text-sm text-[#16151A] outline-none transition placeholder:text-[#A19EA5] focus:border-[#3048E8] focus:ring-2 focus:ring-[#3048E8]/10"
+                    placeholder="Enter it again"
+                    className={inputClass}
                   />
                 </label>
-                {error && (
-                  <p role="alert" className="text-sm text-[#B42318]">
-                    {error}
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#3048E8] px-4 text-sm font-semibold text-white transition hover:bg-[#263FC5] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {busy && <LoaderCircle size={17} className="animate-spin" />}
-                  {busy ? "Updating password..." : "Set new password"}
+                <button type="submit" disabled={busy} className={buttonClass}>
+                  {busy ? (
+                    <>
+                      <LoaderCircle size={17} className="animate-spin" />
+                      Updating…
+                    </>
+                  ) : (
+                    <>
+                      Update password
+                      <ArrowRight size={16} />
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setError(null);
-                    setOtp("");
-                    setPassword("");
-                    setConfirmPassword("");
-                    setStep("email");
+                    setStep("otp");
                   }}
-                  className="min-h-10 w-full rounded-xl px-4 text-sm font-medium text-[#5C5964] transition hover:bg-[#F7F6F2]"
+                  className="w-full py-2 text-sm font-medium text-[#5C5964] hover:text-[#3048E8]"
                 >
-                  Use a different email
+                  Back to OTP
                 </button>
               </form>
             )}
-          </>
+          </section>
         )}
-      </section>
+
+        {step !== "complete" && (
+          <p className="mt-8 text-center text-sm text-[#6B6872]">
+            New here?{" "}
+            <Link
+              to="/register"
+              className="font-semibold text-[#3048E8] hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
+        )}
+      </div>
     </main>
   );
 }

@@ -34,6 +34,7 @@ interface ProfileProject {
   _id: string;
   title: string;
   description: string;
+  owner?: string | { _id?: string };
   coverImage?: string;
   category?: string;
   teamSize?: string;
@@ -175,6 +176,12 @@ const Profile = () => {
               <ProjectPost
                 key={project._id}
                 project={project}
+                canManage={
+                  Boolean(user._id) &&
+                  (typeof project.owner === "string"
+                    ? project.owner
+                    : project.owner?._id) === user._id
+                }
                 onUpdated={(updatedProject) =>
                   setProjects((current) =>
                     current.map((item) =>
