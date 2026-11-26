@@ -1,4 +1,6 @@
-import {useNavigate} from "react-router-dom";
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { userContext } from "../../context/UserContext";
 
 interface TeamMember {
   _id: string;
@@ -15,6 +17,9 @@ const TeamMates = ({
   ownerId?: string;
 }) => {
   const navigate = useNavigate();
+  const context = useContext(userContext);
+  const currentUserId = context?.user?._id ?? context?.user?.id;
+  const isCurrentUser = currentUserId === data._id;
   const initials =
     data.name
       ?.trim()
@@ -26,11 +31,15 @@ const TeamMates = ({
   const isOwner = ownerId === data._id;
 
   return (
-    <article className="flex min-w-0 items-center gap-3 rounded-xl border border-[#EAE8E2] bg-[#FCFCFB] p-3 transition-colors hover:border-[#DAD7CF]">
-      <div  onClick ={()=> navigate(`/user/${data._id}`)}
-      className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-[#2F4BE0] text-sm font-bold uppercase text-white shadow-sm">
+    <button
+      type="button"
+      onClick={() => navigate(isCurrentUser ? "/profile" : `/user/${data._id}`)}
+      aria-label={`View ${isCurrentUser ? "your" : data.name || "member"} profile`}
+      className="flex w-full min-w-0 items-center gap-3 rounded-xl border border-[#EAE8E2] bg-[#FCFCFB] p-3 text-left transition-colors hover:border-[#DAD7CF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2F4BE0]"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-[#2F4BE0] text-sm font-bold uppercase text-white shadow-sm">
         {data.profile ? (
-          <img 
+          <img
             src={data.profile}
             alt=""
             className="h-full w-full object-cover"
@@ -39,7 +48,7 @@ const TeamMates = ({
         ) : (
           initials
         )}
-      </div>
+      </span>
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-[#16151A]">
@@ -58,7 +67,7 @@ const TeamMates = ({
           Owner
         </span>
       )}
-    </article>
+    </button>
   );
 };
 

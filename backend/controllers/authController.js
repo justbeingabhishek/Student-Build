@@ -1,7 +1,28 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { signupSchema, loginSchema } from "../validations/authValidation.js";
+import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import {
+  signupSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "../validations/authValidation.js";
 import User from "../models/User.Model.js";
+import { sendPasswordResetOtp } from "../services/api.js";
+
+const resetOtpLifetimeMs = 10 * 60 * 1000;
+const resetOtpResendWaitMs = 60 * 1000;
+const maxResetOtpAttempts = 5;
+
+const hashResetOtp = (otp) =>
+  createHash("sha256").update(otp).digest("hex");
+
+const clearResetOtp = (user) => {
+  user.passwordResetOtpHash = undefined;
+  user.passwordResetOtpExpiresAt = undefined;
+  user.passwordResetOtpAttempts = 0;
+  user.passwordResetOtpSentAt = undefined;
+};
 
 const isProduction =
   process.env.NODE_ENV === "production" || process.env.RENDER === "true";
@@ -106,6 +127,152 @@ const login = async (req, res) => {
   });
 };
 
+const forgotPassword = async (req, res) => {
+  const result = forgotPasswordSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ message: "Enter a valid email address." });
+  }
+
+  const { email } = result.data;
+  const user = await User.findOne({ email }).select(
+    "+passwordResetOtpSentAt",
+  );
+  const genericResponse = {
+    success: true,
+    message:
+      "If an account exists for this email, a verification code has been sent.",
+  };
+
+  if (!user) {
+    return res.status(202).json(genericResponse);
+  }
+
+  const now = new Date();
+  if (
+    user.passwordResetOtpSentAt &&
+    now.getTime() - user.passwordResetOtpSentAt.getTime() <
+      resetOtpResendWaitMs
+  ) {
+    return res.status(202).json(genericResponse);
+  }
+
+  const otp = randomInt(100000, 1000000).toString();
+  user.passwordResetOtpHash = hashResetOtp(otp);
+  user.passwordResetOtpExpiresAt = new Date(
+    now.getTime() + resetOtpLifetimeMs,
+  );
+  user.passwordResetOtpAttempts = 0;
+  user.passwordResetOtpSentAt = now;
+  await user.save();
+
+  try {
+    await sendPasswordResetOtp(user.email, user.name, otp);
+  } catch (error) {
+    clearResetOtp(user);
+    await user.save();
+    console.error(
+      "Unable to deliver password reset code:",
+      error instanceof Error ? error.message : "Unknown email service error",
+    );
+    return res.status(503).json({
+      success: false,
+      message: "We couldn’t send a verification code right now. Please try again.",
+    });
+  }
+
+  return res.status(202).json(genericResponse);
+};
+
+const resetPassword = async (req, res) => {
+  const result = resetPasswordSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ message: "Invalid password reset details." });
+  }
+
+  const { email, otp, newPassword } = result.data;
+  const user = await User.findOne({ email }).select(
+    "+passwordResetOtpHash +passwordResetOtpExpiresAt +passwordResetOtpAttempts",
+  );
+  const invalidCodeResponse = {
+    success: false,
+    message: "The verification code is invalid or expired. Request a new code.",
+  };
+  const now = new Date();
+
+  if (
+    !user ||
+    !user.passwordResetOtpHash ||
+    !user.passwordResetOtpExpiresAt ||
+    user.passwordResetOtpExpiresAt <= now
+  ) {
+    return res.status(400).json(invalidCodeResponse);
+  }
+
+  const attempts = user.passwordResetOtpAttempts ?? 0;
+  if (attempts >= maxResetOtpAttempts) {
+    clearResetOtp(user);
+    await user.save();
+    return res.status(400).json(invalidCodeResponse);
+  }
+
+  const submittedHash = Buffer.from(hashResetOtp(otp), "hex");
+  const storedHash = Buffer.from(user.passwordResetOtpHash, "hex");
+  const matches =
+    submittedHash.length === storedHash.length &&
+    timingSafeEqual(submittedHash, storedHash);
+
+  if (!matches) {
+    const update = {};
+    if (attempts + 1 >= maxResetOtpAttempts) {
+      update.$unset = {
+        passwordResetOtpHash: "",
+        passwordResetOtpExpiresAt: "",
+        passwordResetOtpAttempts: "",
+        passwordResetOtpSentAt: "",
+      };
+    } else {
+      update.$inc = { passwordResetOtpAttempts: 1 };
+    }
+    await User.updateOne(
+      {
+        _id: user._id,
+        passwordResetOtpHash: user.passwordResetOtpHash,
+        passwordResetOtpAttempts: attempts,
+      },
+      update,
+    );
+    return res.status(400).json(invalidCodeResponse);
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const updateResult = await User.updateOne(
+    {
+      _id: user._id,
+      passwordResetOtpHash: user.passwordResetOtpHash,
+      passwordResetOtpExpiresAt: { $gt: now },
+      passwordResetOtpAttempts: { $lt: maxResetOtpAttempts },
+    },
+    {
+      $set: { password: hashedPassword },
+      $unset: {
+        passwordResetOtpHash: "",
+        passwordResetOtpExpiresAt: "",
+        passwordResetOtpAttempts: "",
+        passwordResetOtpSentAt: "",
+      },
+    },
+  );
+
+  if (updateResult.matchedCount !== 1) {
+    return res.status(400).json(invalidCodeResponse);
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Password updated successfully.",
+  });
+};
+
 const logout = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
@@ -120,4 +287,4 @@ const logout = (req, res) => {
   });
 };
 
-export { signup, login, logout };
+export { signup, login, logout, forgotPassword, resetPassword };

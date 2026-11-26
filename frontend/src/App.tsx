@@ -15,6 +15,7 @@ import Login from "./components/auth/login/Login";
 import Signup from "./components/auth/register/Register";
 import UserProtectedRoute from "./protectedRoutes/UserProtectedRoute";
 import UserProfile from "./pages/UserProfile";
+import ForgotPassword from "./pages/ForgotPassword";
 import { useContext } from "react";
 import { userContext } from "./context/UserContext";
 import { EmptyState } from "./components/error/PageState";
@@ -31,6 +32,7 @@ const App = () => {
         {/* common routes  */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* user routes */}
         <Route path="/" element={<UserProtectedRoute user={user}><UserLayout /></UserProtectedRoute>}>
