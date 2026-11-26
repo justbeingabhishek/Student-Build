@@ -1,4 +1,5 @@
 import { success } from "zod";
+import mongoose from "mongoose";
 import User from "../models/User.Model.js"
 
 import updateProfileSchema from "../validations/userValidation.js"
@@ -86,9 +87,8 @@ const getUserById = async(req,res)=>{
 
 const getUserProject = async(req,res)=>{
     try{
-        const userId = req.userid;
+        const userId = req.params.id || req.userid;
 
-        console.log("userid : ",userId);
         if(!userId){
             return res.status(401).json({
                 success : false,
@@ -96,9 +96,18 @@ const getUserProject = async(req,res)=>{
             })
         }
 
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid user ID",
+            });
+        }
+
         const projects = await Project.find({
-            owner : userId
+            $or: [{ owner: userId }, { team: userId }],
         })
+            .select("title description techStack")
+            .sort({ createdAt: -1 });
 
 
         res.status(200).json({
@@ -107,7 +116,7 @@ const getUserProject = async(req,res)=>{
         })
 
     }catch(err){
-        console.log("error : ",err.message);
+        console.error("Unable to fetch user projects:", err);
         res.status(500).json({
             success : false,
             message : "Internal server error"

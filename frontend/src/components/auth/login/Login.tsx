@@ -20,7 +20,7 @@ const Login = () => {
   } = useForm<LoginFormData>();
 
   const navigate = useNavigate();
-  const { setUser } = useContext(userContext)!;
+  const { setUser , fetchProjects} = useContext(userContext)!;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -34,6 +34,7 @@ const Login = () => {
       console.log("LOGIN RESPONSE:", response.data);
       if(response.data.success){
         const { user } = response.data;
+        fetchProjects();
         setUser(user);
         navigate("/");
       }

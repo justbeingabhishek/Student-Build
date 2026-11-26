@@ -163,7 +163,7 @@ const Signup = () => {
         <div className="mt-4.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            onClick={() => (window.location.href = "/login")}
+            onClick={() => navigate("/login")}
             className="rounded-full border border-[#dedbd3] bg-white px-4 py-3 text-base hover:bg-[#eeece7] md:px-5 md:py-3.5 md:text-[19px]"
           >
             Have an account? Log in
@@ -171,7 +171,7 @@ const Signup = () => {
 
           <button
             type="button"
-            onClick={() => (window.location.href = "/forgot-password")}
+            onClick={() => navigate("/forgot-password")}
             className="rounded-full border border-[#dedbd3] bg-white px-4 py-3 text-base hover:bg-[#eeece7] md:px-5.25 md:py-3.5 md:text-[19px]"
           >
             Forgot password?

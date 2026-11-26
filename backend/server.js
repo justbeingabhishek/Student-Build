@@ -33,12 +33,6 @@ app.use(cors({
   }));
 
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-
-await connectDb();
-
 app.use("/api", TestRoutes);
 
 app.use("/api/auth",authRoutes);
@@ -50,3 +44,9 @@ app.use("/api/users",usersRoutes);
 app.use("/api/application",applicationRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+
+await connectDb();
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

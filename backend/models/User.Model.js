@@ -15,6 +15,23 @@ const userSchema = new mongoose.Schema({
         required:true,
         select:false
     },
+    passwordResetOtpHash: {
+        type: String,
+        select: false,
+    },
+    passwordResetOtpExpiresAt: {
+        type: Date,
+        select: false,
+    },
+    passwordResetOtpAttempts: {
+        type: Number,
+        default: 0,
+        select: false,
+    },
+    passwordResetOtpSentAt: {
+        type: Date,
+        select: false,
+    },
     college : {
         type:String,
         default : ""
